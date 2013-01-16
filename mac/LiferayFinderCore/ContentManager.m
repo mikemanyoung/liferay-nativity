@@ -21,25 +21,28 @@
 
 static ContentManager* sharedInstance = nil;
 
-OSStatus    SendFinderSyncEvent( const FSRef* inObjectRef )
+OSStatus SendFinderSyncEvent( const FSRef* inObjectRef )
 {
     AppleEvent  theEvent = { typeNull, NULL };
     AppleEvent  replyEvent = { typeNull, NULL };
     AliasHandle itemAlias = NULL;
-    const OSType    kFinderSig = 'MACS';
-    
-    OSStatus    err = FSNewAliasMinimal( inObjectRef, &itemAlias );
+
+    OSStatus err = FSNewAliasMinimal( inObjectRef, &itemAlias );
+
     if (err == noErr)
     {
-        err = AEBuildAppleEvent( kAEFinderSuite, kAESync, typeApplSignature,
-                                &kFinderSig, sizeof(OSType), kAutoGenerateReturnID,
+        ProcessSerialNumber psn = { 0, kCurrentProcess };
+        pid_t pid;
+        GetProcessPID(&psn, &pid);
+
+        err = AEBuildAppleEvent( kAEFinderSuite, kAESync, typeKernelProcessID,
+                                &pid, sizeof(pid), kAutoGenerateReturnID,
                                 kAnyTransactionID, &theEvent, NULL, "'----':alis(@@)", itemAlias );
         
         if (err == noErr)
         {
-            err = AESendMessage( &theEvent, &replyEvent, kAENoReply,
-                                kAEDefaultTimeout );
-            
+            err = AESendMessage( &theEvent, &replyEvent, kAENoReply, kAEDefaultTimeout );
+
             AEDisposeDesc( &replyEvent );
             AEDisposeDesc( &theEvent );
         }
@@ -91,16 +94,29 @@ OSStatus    SendFinderSyncEvent( const FSRef* inObjectRef )
 
 -(void) setIcon : (NSNumber*) icon forFile : (NSString*) path
 {
-    [fileNamesCache_ setObject:icon forKey:path];
+    NSDictionary* iconDictionary = [[NSMutableDictionary alloc] init];
+    [iconDictionary setValue:icon forKey:path];
+    
+    [self setIcons:iconDictionary];
+}
 
-    FSRef ref;
-    CFURLGetFSRef((CFURLRef)[NSURL fileURLWithPath: path], &ref);
-    SendFinderSyncEvent(&ref);
-    
+-(void) setIcons : (NSDictionary*) iconDictionary
+{
+    for (NSString* path in iconDictionary)
+    {
+        NSNumber* iconId = [iconDictionary objectForKey:path];
+
+        [fileNamesCache_ setObject:iconId forKey:path];
+
+        FSRef ref;
+        CFURLGetFSRef((CFURLRef)[NSURL fileURLWithPath: path], &ref);
+        SendFinderSyncEvent(&ref);
+    }
+
     [[NSWorkspace sharedWorkspace] noteFileSystemChanged];
-    
+
     NSArray* windows = [[NSApplication sharedApplication] windows];
-    
+
     for (int i=0;i<[windows count];++i)
     {
         NSWindow* window = [windows objectAtIndex:i];

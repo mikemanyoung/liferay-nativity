@@ -14,10 +14,13 @@
 
 package com.liferay.nativity.mac;
 
-import java.io.DataInputStream;
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class PluginControl {
 
@@ -30,16 +33,17 @@ public class PluginControl {
 		try {
 			_serviceSocket = new Socket("127.0.0.1", 33001);
 
-			_serviceInputStream = new DataInputStream(
-				_serviceSocket.getInputStream());
-			
+			_serviceBufferedReader = new BufferedReader(
+				new InputStreamReader(_serviceSocket.getInputStream()));
+
 			_serviceOutputStream = new DataOutputStream(
 				_serviceSocket.getOutputStream());
 
 			_callbackSocket = new Socket("127.0.0.1", 33002);
 
-			_callbackInputStream = new DataInputStream(
-				_callbackSocket.getInputStream());
+			_callbackBufferedReader = new BufferedReader(
+				new InputStreamReader(_callbackSocket.getInputStream()));
+
 			_callbackOutputStream = new DataOutputStream(
 				_callbackSocket.getOutputStream());
 
@@ -96,9 +100,27 @@ public class PluginControl {
 	 * @param name of file
 	 */
 	public void removeFileIcon(String fileName) {
-		String command = "remove FileIcon:" + fileName;
+		String command = "removeFileIcon:" + fileName;
 
 		_sendCommand(command);	
+	}
+
+	/**
+	 * Remove icon overlays from files (previously set by setIconForFile)
+	 * 
+	 * @param array of files
+	 */
+	public void removeFileIcon(String[] fileNames) {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("removeFileIcons");
+
+		for (String fileName : fileNames) {
+			sb.append(":");
+			sb.append(fileName);
+		}
+
+		_sendCommand(sb.toString());	
 	}
 
 	/**
@@ -124,6 +146,44 @@ public class PluginControl {
 
 		_sendCommand(command);
 	}
+
+	/**
+	 * Associate icons with multiple fileNames.
+	 * 
+	 * @param map containing icon id values keyed by file name
+	 */
+    public void setIconsForFiles(
+    	Map<String, Integer> fileIconsMap) {
+
+    	StringBuilder sb = new StringBuilder();
+
+    	sb.append("setFileIcons");
+
+    	int i = 0;
+
+    	for (Entry<String, Integer> entry : fileIconsMap.entrySet()) {
+    		sb.append(":");
+    		sb.append(entry.getKey());
+    		sb.append(":");
+    		sb.append(entry.getValue());
+
+    		i++;
+
+    		if (i == _messageBufferSize) {
+    			_sendCommand(sb.toString());
+
+    			sb = new StringBuilder();
+
+    	    	sb.append("setFileIcons"); 
+
+    			i = 0;
+    		}
+    	}
+
+    	if (i > 0) {
+    		_sendCommand(sb.toString());	    		
+    	}
+    }
 
 	/**
 	 * Unregister icon in the service
@@ -163,8 +223,8 @@ public class PluginControl {
 	private void doCallbackLoop() {
 		while (_callbackSocket.isConnected()) {
 			try {
-				String data = _callbackInputStream.readLine();
-	
+				String data = _callbackBufferedReader.readLine();
+
 				if (data.startsWith("menuQuery:")) {
 					String currentFiles = data.substring(10, data.length());
 					
@@ -203,38 +263,39 @@ public class PluginControl {
 			
 			_serviceOutputStream.writeBytes(command);
 			
-			String reply = _serviceInputStream.readLine();
-			
+			String reply = _serviceBufferedReader.readLine();
+
 			return reply;
 		}
 		catch (IOException e) {
 			return null;
 		}	
 	}
-	
+
 	private class ReadThread extends Thread {
-	
+
 		public ReadThread(PluginControl pluginControl) {
 			_pluginControl = pluginControl;
 		}
-	
+
 		@Override
 		public void run() {
 			_pluginControl.doCallbackLoop();
 		}
-	
+
 		private PluginControl _pluginControl;
-		
+
 	}
-	
-	private DataInputStream _callbackInputStream;
+
+	private static long _messageBufferSize = 500;
+
+	private BufferedReader _callbackBufferedReader;
 	private DataOutputStream _callbackOutputStream;
 	private Socket _callbackSocket;
 	private ReadThread _callbackThread;
 	private String[] _currentFiles;
-
+	private BufferedReader _serviceBufferedReader;
 	private Socket _serviceSocket;
-	private DataInputStream _serviceInputStream;
 	private DataOutputStream _serviceOutputStream;
 
 }	
