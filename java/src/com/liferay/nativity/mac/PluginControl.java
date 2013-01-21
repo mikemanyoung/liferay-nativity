@@ -12,214 +12,297 @@
  * details.
  */
 
-
 package com.liferay.nativity.mac;
 
-import java.io.DataInputStream;
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
-
-import static java.lang.Thread.sleep;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class PluginControl {
-    private Socket serviceSocket;
-    private DataInputStream serviceInputStream;
-    private DataOutputStream serviceOutputStream;
 
-    private Socket callbackSocket;
-    private DataInputStream callbackInputStream;
-    private DataOutputStream callbackOutputStream;
-    private ReadThread callbackThread = null;
-    private String[] currentFiles;
+	/**
+	 * Initialize connection with native service
+	 *
+	 * @return true if connection is successful
+	 */
+	public boolean connect() {
+		try {
+			_serviceSocket = new Socket("127.0.0.1", 33001);
 
-    private class ReadThread extends Thread {
-        private PluginControl control;
+			_serviceBufferedReader = new BufferedReader(
+				new InputStreamReader(_serviceSocket.getInputStream()));
 
-        public ReadThread(PluginControl ctl)
-        {
-               control = ctl;
-        }
+			_serviceOutputStream = new DataOutputStream(
+				_serviceSocket.getOutputStream());
 
-        @Override
-        public void run() {
-            control.DoCallbackLoop();
-        }
+			_callbackSocket = new Socket("127.0.0.1", 33002);
+
+			_callbackBufferedReader = new BufferedReader(
+				new InputStreamReader(_callbackSocket.getInputStream()));
+
+			_callbackOutputStream = new DataOutputStream(
+				_callbackSocket.getOutputStream());
+
+			_callbackThread = new ReadThread(this);
+			_callbackThread.start();
+		}
+		catch (IOException e) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * disconnects from plugin service
+	 */
+	public void disconnect() {
+		try {
+			_serviceSocket.close();
+		}
+		catch (IOException e) {
+		}
+	}
+
+	/**
+	 * Enable/Disable icon overlay feature
+	 *
+	 * @param enable pass true is overlay feature should be enabled
+	 */
+	public void enableOverlays(boolean enable) {
+		String command = "enableOverlays:" + (enable ? "1" : "0");
+
+		_sendCommand(command);
+	}
+
+	/**
+	 * Register icon in the service
+	 *
+	 * @param path to icon file
+	 *
+	 * @return registered icon id or 0 in case error
+	 */
+	public int registerIcon(String path) {
+		String command = "registerIcon:" + path;
+
+		String reply = _sendCommand(command);
+
+		return Integer.parseInt(reply);
+	}
+
+	/**
+	 * Remove icon overlay from file (previously set by setIconForFile)
+	 *
+	 * @param name of file
+	 */
+	public void removeFileIcon(String fileName) {
+		String command = "removeFileIcon:" + fileName;
+
+		_sendCommand(command);
+	}
+
+	/**
+	 * Remove icon overlays from files (previously set by setIconForFile)
+	 *
+	 * @param array of files
+	 */
+	public void removeFileIcon(String[] fileNames) {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("removeFileIcons");
+
+		for (String fileName : fileNames) {
+			sb.append(":");
+			sb.append(fileName);
+		}
+
+		_sendCommand(sb.toString());	
+	}
+
+	/**
+	 * Set title of root context menu item, all other items will be added as
+	 * children of it
+	 *
+	 * @param new title of item
+	 */
+	public void setContextMenuTitle(String title) {
+		String command = "setMenuTitle:" + title;
+
+		_sendCommand(command);
+	}
+
+	/**
+	 * Associate icon with fileName
+	 *
+	 * @param target file name
+	 * @param id of icon that should be associated with file
+	 */
+	public void setIconForFile(String fileName, int iconId) {
+		String command = "setFileIcon:" + fileName + ":" + iconId;
+
+		_sendCommand(command);
+	}
+
+	/**
+	 * Associate icons with multiple fileNames.
+	 * 
+	 * @param map containing icon id values keyed by file name
+	 */
+    public void setIconsForFiles(
+    	Map<String, Integer> fileIconsMap) {
+
+    	StringBuilder sb = new StringBuilder();
+
+    	sb.append("setFileIcons");
+
+    	int i = 0;
+
+    	for (Entry<String, Integer> entry : fileIconsMap.entrySet()) {
+    		sb.append(":");
+    		sb.append(entry.getKey());
+    		sb.append(":");
+    		sb.append(entry.getValue());
+
+    		i++;
+
+    		if (i == _messageBufferSize) {
+    			_sendCommand(sb.toString());
+
+    			sb = new StringBuilder();
+
+    	    	sb.append("setFileIcons"); 
+
+    			i = 0;
+    		}
+    	}
+
+    	if (i > 0) {
+    		_sendCommand(sb.toString());	    		
+    	}
     }
 
-    private void DoCallbackLoop()
-    {
-        while (callbackSocket.isConnected())
-        {
-            try {
-                String data = callbackInputStream.readLine();
+	/**
+	 * Unregister icon in the service
+	 *
+	 * @param id of icon previously registered by registerIcon method
+	 */
+	public void unregisterIcon(int id) {
+		String command = "unregisterIcon:" + id;
 
-                if (data.startsWith("menuQuery:"))
-                {
-                    currentFiles = data.substring(10, data.length()).split(":");
+		_sendCommand(command);
+	}
 
-                    String[] items = getMenuItems(currentFiles);
-                    String itemsStr = new String();
-                    if (items != null)
-                    {
-                        for (int i=0;i<items.length;++i)
-                        {
-                            if (i > 0)
-                                itemsStr += ":";
+	/**
+	 * Callback method called by native plugin when context menu executed on one
+	 * or more files. User code can override this method to add a number of
+	 * additional items to context menu.
+	 *
+	 * @param array of file names on which context menu executed
+	 *
+	 * @return array of menu items that should be added to context menu, or null
+	 *         if additional context menu not needed
+	 */
+	protected String[] getMenuItems(String[] files) {
+		return null;
+	}
 
-                            itemsStr += items[i];
-                        }
-                    }
-                    callbackOutputStream.writeBytes(itemsStr+"\r\n");
-                }
-                if (data.startsWith("menuExec:"))
-                {
-                    menuItemExecuted(Integer.parseInt(data.substring(9, data.length())),currentFiles);
-                }
+	/**
+	 * Callback method that executes when user selects custom menu item
+	 *
+	 * @param index of menu item (index in the array returned by previous
+	 *        getMenuItems call)
+	 * @param files array on which context menu item executed
+	 */
+	protected void menuItemExecuted(int index, String[] files) {
+	}
 
-            } catch (IOException e)
-            {
-            }
-        }
-    }
+	private void _doCallbackLoop() {
+		while (_callbackSocket.isConnected()) {
+			try {
+				String data = _callbackBufferedReader.readLine();
 
-    /**
-     * Callback method that executes when user selects custom menu item
-     * @param index index of menu item (index in the array returned by previous getMenuItems call)
-     * @param files array on which context menu item executed
-     */
-    protected void menuItemExecuted(int index, String[] files) {
-    }
+				if (data.startsWith("menuQuery:")) {
+					String currentFiles = data.substring(10, data.length());
 
-    /**
-     * Callback method called by native plugin when context menu executed on one or more files
-     * User code can override this method to add a number of additional items to context menu
-     * @param files array of file names on which context menu executed
-     * @return array of menu items that should be added to context menu, or null if additional context menu not needed
-     */
-    protected String[] getMenuItems(String[] files) {
-        return null;
-    }
+					_currentFiles = currentFiles.split(":");
 
-    /**
-     * Initialize connection with native service
-     * @return true if connection is successfull
-     */
-    public boolean connect() {
-        try {
-            serviceSocket = new Socket("127.0.0.1",33001);
-            serviceInputStream = new DataInputStream(serviceSocket.getInputStream());
-            serviceOutputStream = new DataOutputStream(serviceSocket.getOutputStream());
+					String[] items = getMenuItems(_currentFiles);
 
-            callbackSocket = new Socket("127.0.0.1",33002);
-            callbackInputStream = new DataInputStream(callbackSocket.getInputStream());
-            callbackOutputStream = new DataOutputStream(callbackSocket.getOutputStream());
+					String itemsStr = new String();
 
-            callbackThread = new ReadThread(this);
-            callbackThread.start();
+					if (items != null) {
+						for (int i=0; i<items.length; ++i) {
+							if (i > 0)
+								itemsStr += ":";
 
-        } catch (IOException e) {
-            return false;
-        }
+							itemsStr += items[i];
+						}
+					}
 
-        return true;
-    }
+					_callbackOutputStream.writeBytes(itemsStr + "\r\n");
+				}
 
-    /**
-     * disconnects from plugin service
-     */
-    public void disconnect() {
-        try {
-            serviceSocket.close();
-        }
-        catch (IOException e) {
-        }
-    }
+				if (data.startsWith("menuExec:")) {
+					menuItemExecuted(
+						Integer.parseInt(data.substring(9, data.length())),
+						_currentFiles);
+				}
+			}
+			catch (IOException e) {
+			}
+		}
+	}
 
-    /**
-     * Enable/Disable icon overlay feature.
-     * @param enable pass true is overlay feature should be enabled
-     */
-    public void enableOverlays(boolean enable) {
-        try {
-            String cmd = new String("enableOverlays:" + (enable ? "1" : "0") + "\r\n");
-            serviceOutputStream.writeBytes(cmd);
-            serviceInputStream.readLine();
-        } catch (IOException e) {
-        }
-    }
+	private String _sendCommand(String command) {
+		try {
+			command += "\r\n";
+			
+			_serviceOutputStream.writeBytes(command);
+			
+			String reply = _serviceBufferedReader.readLine();
 
-    /**
-     * Register icon in the service
-     * @param path to icon file
-     * @return registered icon id or 0 in case error
-     */
-    public int registerIcon(String path) {
-        String cmd = new String("registerIcon:" + path + "\r\n");
-        try {
-            serviceOutputStream.writeBytes(cmd);
-            String reply = serviceInputStream.readLine();
-            return Integer.parseInt(reply);
-        } catch (IOException e) {
-            return 0;
-        }
-    }
+			return reply;
+		}
+		catch (IOException e) {
+			return null;
+		}	
+	}
 
-    /**
-     * Unregister icon in the service
-     * @param id of icon previously registered by registerIcon method
-     */
-    public void unregisterIcon(int id)
-    {
-        String cmd = new String("unregisterIcon:" + id + "\r\n");
-        try {
-            serviceOutputStream.writeBytes(cmd);
-            String reply = serviceInputStream.readLine();
-        } catch (IOException e) {
-        }
-    }
+	private static long _messageBufferSize = 500;
 
-    /**
-     * Associate icon with fileName
-     * @param fileName target file name
-     * @param iconId id of icon that should be associated with file
-     */
-    public void setIconForFile(String fileName, int iconId)
-    {
-        String cmd = new String("setFileIcon:" + fileName + ":" + iconId + "\r\n");
-        try {
-            serviceOutputStream.writeBytes(cmd);
-            String reply = serviceInputStream.readLine();
-        } catch (IOException e) {
-        }
-    }
+	private BufferedReader _callbackBufferedReader;
 
-    /**
-     * Set title of root context menu item, all other items will be added as children of it
-     * @param title new title of item
-     */
-    public void setContextMenuTitle(String title)
-    {
-        String cmd = new String("setMenuTitle:" + title + "\r\n");
-        try {
-            serviceOutputStream.writeBytes(cmd);
-            String reply = serviceInputStream.readLine();
-        } catch (IOException e) {
-        }
-    }
+	private DataOutputStream _callbackOutputStream;
 
-    /**
-     * Remove icon overlay from file (previously set by setIconForFile)
-     * @param fileName name of file
-     */
-    public void removeFileIcon(String fileName)
-    {
-        String cmd = new String("remove  FileIcon:" + fileName + "\r\n");
-        try {
-            serviceOutputStream.writeBytes(cmd);
-            String reply = serviceInputStream.readLine();
-        } catch (IOException e) {
-        }
-    }
+	private Socket _callbackSocket;
 
-   
+	private ReadThread _callbackThread;
+
+	private String[] _currentFiles;
+
+	private BufferedReader _serviceBufferedReader;
+
+	private Socket _serviceSocket;
+
+	private DataOutputStream _serviceOutputStream;
+
+	private class ReadThread extends Thread {
+
+		public ReadThread(PluginControl pluginControl) {
+			_pluginControl = pluginControl;
+		}
+
+		@Override
+		public void run() {
+			_pluginControl._doCallbackLoop();
+		}
+
+		private PluginControl _pluginControl;
+
+	}
+
+}
