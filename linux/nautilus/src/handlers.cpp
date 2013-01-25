@@ -1,26 +1,3 @@
-/*
- *  File-Roller
- *
- *  Copyright (C) 2004 Free Software Foundation, Inc.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public
- *  License as published by the Free Software Foundation; either
- *  version 2 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Library General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public
- *  License along with this library; if not, write to the Free
- *  Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- *  Author: Paolo Bacchilega <paobac@cvs.gnome.org>
- *
- */
-
 #include "config.h"
 #include <string.h>
 #include <glib/gi18n-lib.h>
@@ -30,48 +7,22 @@
 #include <libnautilus-extension/nautilus-menu-provider.h>
 #include "handlers.h"
 #include "logger.h"
+#include "requests.h"
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#include <vector>
 
 static GObjectClass *parent_class;
 
-
-extern "C" void
-extract_to_callback (NautilusMenuItem *item,
-		     gpointer          user_data)
-{
-	GList            *files;
-	NautilusFileInfo *file;
-	char             *uri, *default_dir;
-	GString          *cmd;
-
-	files = (GList*) g_object_get_data (G_OBJECT (item), "files");
-	file = (NautilusFileInfo*) files->data;
-
-	uri = nautilus_file_info_get_uri (file);
-	default_dir = nautilus_file_info_get_parent_uri (file);
-
-	cmd = g_string_new ("file-roller");
-	g_string_append_printf (cmd,
-				" --default-dir=%s --extract %s",
-				g_shell_quote (default_dir),
-				g_shell_quote (uri));
-
-#ifdef DEBUG
-	g_print ("EXEC: %s\n", cmd->str);
-#endif
-
-	g_spawn_command_line_async (cmd->str, NULL);
-
-	g_string_free (cmd, TRUE);
-	g_free (default_dir);
-	g_free (uri);
-}
-
-
-extern "C" void
-extract_here_callback (NautilusMenuItem *item,
+extern "C" void commandExecuted (NautilusMenuItem *item,
 		       gpointer          user_data)
 {
-	GList            *files, *scan;
+	std::string cmdId("menuExec:");
+	cmdId += boost::lexical_cast<std::string>((int)user_data);
+
+	RequestManager::instance().menuExecuted(cmdId); 
+
+/*	GList            *files, *scan;
 	NautilusFileInfo *file;
 	char             *dir;
 	GString          *cmd;
@@ -79,14 +30,8 @@ extract_here_callback (NautilusMenuItem *item,
 	files = (GList*) g_object_get_data (G_OBJECT (item), "files");
 	file = (NautilusFileInfo*) files->data;
 
-	dir = nautilus_file_info_get_parent_uri (file);
-
-	cmd = g_string_new ("file-roller");
-	g_string_append_printf (cmd," --extract-here");
-
-	g_free (dir);
-
-	for (scan = files; scan; scan = scan->next) {
+	for (scan = files; scan; scan = scan->next)
+        {
 		NautilusFileInfo* file = (NautilusFileInfo*)scan->data;
 		char             *uri;
 
@@ -95,290 +40,84 @@ extract_here_callback (NautilusMenuItem *item,
 		g_free (uri);
 	}
 
-	g_spawn_command_line_async (cmd->str, NULL);
-
-#ifdef DEBUG
-	g_print ("EXEC: %s\n", cmd->str);
-#endif
-
-	g_string_free (cmd, TRUE);
+	g_string_free (cmd, TRUE);*/
 }
 
 
-extern "C" void
-add_callback (NautilusMenuItem *item,
-	      gpointer          user_data)
-{
-	GList            *files, *scan;
-	NautilusFileInfo *file;
-	char             *uri, *dir;
-	GString          *cmd;
-
-	files = (GList*) g_object_get_data (G_OBJECT (item), "files");
-	file = (NautilusFileInfo*) files->data;
-
-	uri = nautilus_file_info_get_uri (file);
-	dir = g_path_get_dirname (uri);
-
-	cmd = g_string_new ("file-roller");
-	g_string_append (cmd, " --notify");
-	g_string_append_printf (cmd," --default-dir=%s", g_shell_quote (dir));
-	g_string_append (cmd," --add");
-
-	g_free (dir);
-	g_free (uri);
-
-	for (scan = files; scan; scan = scan->next) {
-		NautilusFileInfo *file = (NautilusFileInfo*) scan->data;
-
-		uri = nautilus_file_info_get_uri (file);
-		g_string_append_printf (cmd, " %s", g_shell_quote (uri));
-		g_free (uri);
-	}
-
-	g_spawn_command_line_async (cmd->str, NULL);
-
-	g_string_free (cmd, TRUE);
-}
-
-
-/*static struct {
-	char     *mime_type;
-	gboolean  is_compressed;
-} archive_mime_types[] = {
-		{ "application/x-7z-compressed", TRUE },
-		{ "application/x-7z-compressed-tar", TRUE },
-		{ "application/x-ace", TRUE },
-		{ "application/x-alz", TRUE },
-		{ "application/x-ar", TRUE },
-		{ "application/x-arj", TRUE },
-		{ "application/x-bzip", TRUE },
-		{ "application/x-bzip-compressed-tar", TRUE },
-		{ "application/x-bzip1", TRUE },
-		{ "application/x-bzip1-compressed-tar", TRUE },
-		{ "application/vnd.ms-cab-compressed", TRUE },
-		{ "application/x-cbr", TRUE },
-		{ "application/x-cbz", TRUE },
-		{ "application/x-cd-image", FALSE },
-		{ "application/x-compress", TRUE },
-		{ "application/x-compressed-tar", TRUE },
-		{ "application/x-cpio", TRUE },
-		{ "application/x-deb", TRUE },
-		{ "application/x-ear", TRUE },
-		{ "application/x-ms-dos-executable", FALSE },
-		{ "application/x-gtar", FALSE },
-		{ "application/x-gzip", TRUE },
-		{ "application/x-gzpostscript", TRUE },
-		{ "application/x-java-archive", TRUE },
-		{ "application/x-lha", TRUE },
-		{ "application/x-lhz", TRUE },
-		{ "application/x-lzip", TRUE },
-		{ "application/x-lzip-compressed-tar", TRUE },
-		{ "application/x-lzma", TRUE },
-		{ "application/x-lzma-compressed-tar", TRUE },
-		{ "application/x-lzop", TRUE },
-		{ "application/x-lzop-compressed-tar", TRUE },
-		{ "application/x-ms-wim", TRUE },
-		{ "application/x-rar", TRUE },
-		{ "application/x-rar-compressed", TRUE },
-		{ "application/x-rpm", TRUE },
-		{ "application/x-rzip", TRUE },
-		{ "application/x-tar", FALSE },
-		{ "application/x-tarz", TRUE },
-		{ "application/x-stuffit", TRUE },
-		{ "application/x-war", TRUE },
-		{ "application/x-xz", TRUE },
-		{ "application/x-xz-compressed-tar", TRUE },
-		{ "application/x-zip", TRUE },
-		{ "application/x-zip-compressed", TRUE },
-		{ "application/x-zoo", TRUE },
-		{ "application/zip", TRUE },
-		{ "multipart/x-zip", TRUE },
-		{ NULL, FALSE }
-};*/
-
-
-typedef struct {
-      gboolean is_archive;
-      gboolean is_derived_archive;
-      gboolean is_compressed_archive;
-} FileMimeInfo;
-
-
-static FileMimeInfo
-get_file_mime_info (NautilusFileInfo *file)
-{
-	FileMimeInfo file_mime_info;
-	int          i;
-
-	file_mime_info.is_archive = FALSE;
-	file_mime_info.is_derived_archive = FALSE;
-	file_mime_info.is_compressed_archive = FALSE;
-
-	/*for (i = 0; archive_mime_types[i].mime_type != NULL; i++)
-		if (nautilus_file_info_is_mime_type (file, archive_mime_types[i].mime_type)) {
-			char *mime_type;
-			char *content_type_mime_file;
-			char *content_type_mime_compare;
-
-			mime_type = nautilus_file_info_get_mime_type (file);
-
-			content_type_mime_file = g_content_type_from_mime_type (mime_type);
-			content_type_mime_compare = g_content_type_from_mime_type (archive_mime_types[i].mime_type);
-
-			file_mime_info.is_archive = TRUE;
-			file_mime_info.is_compressed_archive = archive_mime_types[i].is_compressed;
-			if ((content_type_mime_file != NULL) && (content_type_mime_compare != NULL))
-				file_mime_info.is_derived_archive = ! g_content_type_equals (content_type_mime_file, content_type_mime_compare);
-
-			g_free (mime_type);
-			g_free (content_type_mime_file);
-			g_free (content_type_mime_compare);
-
-			return file_mime_info;
-		}
-*/
-	return file_mime_info;
-}
-
-
-extern "C" gboolean
-unsupported_scheme (NautilusFileInfo *file)
-{
-	gboolean  result = FALSE;
-	/*GFile    *location;
-	char     *scheme;
-
-	location = nautilus_file_info_get_location (file);
-	scheme = g_file_get_uri_scheme (location);
-
-	if (scheme != NULL) {
-		const char *unsupported[] = { "trash", "computer", NULL };
-		int         i;
-
-		for (i = 0; unsupported[i] != NULL; i++)
-			if (strcmp (scheme, unsupported[i]) == 0)
-				result = TRUE;
-	}
-
-	g_free (scheme);
-	g_object_unref (location);*/
-
-	return result;
-}
-
-
-extern "C" GList *
-nautilus_fr_get_file_items (NautilusMenuProvider *provider,
-			    GtkWidget            *window,
-			    GList                *files)
+extern "C" GList* nautilus_fr_get_file_items (NautilusMenuProvider* provider, GtkWidget* window, GList* files)
 {
 	GList    *items = NULL;
 	GList    *scan;
-	gboolean  can_write = TRUE;
-	gboolean  one_item;
-	gboolean  one_archive = FALSE;
-	gboolean  one_derived_archive = FALSE;
-	gboolean  one_compressed_archive = FALSE;
-	gboolean  all_archives = TRUE;
-	gboolean  all_archives_derived = TRUE;
-	gboolean  all_archives_compressed = TRUE;
-
 
 	if (files == NULL)
 		return NULL;
 
-	/*if (unsupported_scheme ((NautilusFileInfo *) files->data))
-		return NULL;
-*/
-
+	std::string cmd("menuQuery");
 	for (scan = files; scan; scan = scan->next) {
-		NautilusFileInfo *file = (NautilusFileInfo*) scan->data;
-		FileMimeInfo      file_mime_info;
+		NautilusFileInfo* file = (NautilusFileInfo*)scan->data;
+		char             *uri;
 
-		file_mime_info = get_file_mime_info (file);
+		uri = nautilus_file_info_get_uri (file);
+		cmd += ":";
+		cmd += g_filename_from_uri(uri,NULL,NULL);
+		g_free (uri);
+	}
 
-		if (all_archives && ! file_mime_info.is_archive)
-			all_archives = FALSE;
+	std::string answer(RequestManager::instance().queryMenuItems(cmd));
+	//answer = "item1:item2,false:item3,true";
+	if (answer.empty())
+		return NULL;
 
-		if (all_archives_compressed && file_mime_info.is_archive && ! file_mime_info.is_compressed_archive)
-			all_archives_compressed = FALSE;
+	std::vector<std::string> itemsArray;
+	boost::split(itemsArray, answer, boost::is_any_of(":"));
 
-		if (all_archives_derived && file_mime_info.is_archive && ! file_mime_info.is_derived_archive)
-			all_archives_derived = FALSE;
+	if (itemsArray.empty())
+		return NULL;
 
-		if (can_write) {
-			NautilusFileInfo *parent;
+	writeLog("Items count: %d\n", itemsArray.size());
 
-			parent = nautilus_file_info_get_parent_info (file);
- 			can_write = nautilus_file_info_can_write (parent);
+	NautilusMenuItem *item;
+	item = nautilus_menu_item_new ("LiferayMenu",_("Liferay"),_(""),"drive-harddisk");
+
+	items = g_list_append(items, item);
+
+	NautilusMenu* menu = nautilus_menu_new();
+	nautilus_menu_item_set_submenu(item, menu);
+
+	for (int i=0;i<itemsArray.size();++i)
+	{
+		std::string itemTitle(itemsArray[i]);
+		if (itemTitle == "_SEPARATOR_")
+			continue;
+
+		bool enabled(true);
+
+		int pos = itemTitle.find(",");
+		if (pos != itemTitle.npos)
+		{
+			enabled = itemTitle.substr(pos + 1,itemTitle.npos) == "true";
+			itemTitle.erase(pos,itemTitle.npos);
 		}
+
+		NautilusMenuItem *childItem = nautilus_menu_item_new (itemTitle.c_str(),itemTitle.c_str(),_(""),"drive-harddisk");
+
+		if (!enabled)
+		{
+			GValue sensitive = G_VALUE_INIT;
+		    	g_value_init (&sensitive, G_TYPE_BOOLEAN);
+			g_value_set_boolean (&sensitive, FALSE);
+		  
+		  	g_object_set_property (G_OBJECT(childItem), "sensitive", &sensitive);
+		}
+		else
+		{
+			g_signal_connect(childItem, "activate", G_CALLBACK(commandExecuted), (gpointer)i);
+			//g_object_set_data_full(G_OBJECT(childItem), "files", nautilus_file_info_list_copy(files), (GDestroyNotify) 				nautilus_file_info_list_free);
+		}
+
+		nautilus_menu_append_item(menu, childItem);
 	}
 
-	/**/
-
-	one_item = (files != NULL) && (files->next == NULL);
-	one_archive = one_item && all_archives;
-	one_derived_archive = one_archive && all_archives_derived;
-	one_compressed_archive = one_archive && all_archives_compressed;
-
-	//if (all_archives && can_write) {
-		NautilusMenuItem *item;
-
-		item = nautilus_menu_item_new ("NautilusFr::extract_here",
-					       _("Extract Here 1"),
-					       /* Translators: the current position is the current folder */
-					       _("Extract the selected archive to the current position"),
-					       "drive-harddisk");
-		g_signal_connect (item,
-				  "activate",
-				  G_CALLBACK (extract_here_callback),
-				  provider);
-		g_object_set_data_full (G_OBJECT (item),
-					"files",
-					nautilus_file_info_list_copy (files),
-					(GDestroyNotify) nautilus_file_info_list_free);
-
-		items = g_list_append (items, item);
-	/*}
-	else if (all_archives && ! can_write) {
-		NautilusMenuItem *item;
-
-		item = nautilus_menu_item_new ("NautilusFr::extract_to",
-					       _("Extract To..."),
-					       _("Extract the selected archive"),
-					       "drive-harddisk");
-		g_signal_connect (item,
-				  "activate",
-				  G_CALLBACK (extract_to_callback),
-				  provider);
-		g_object_set_data_full (G_OBJECT (item),
-					"files",
-					nautilus_file_info_list_copy (files),
-					(GDestroyNotify) nautilus_file_info_list_free);
-
-		items = g_list_append (items, item);
-
-	}
-
-	if (! one_compressed_archive || one_derived_archive) {
-		NautilusMenuItem *item;
-
-		item = nautilus_menu_item_new ("NautilusFr::add",
-					       _("Compress..."),
-					       _("Create a compressed archive with the selected objects"),
-					       "gnome-mime-application-x-archive");
-		g_signal_connect (item,
-				  "activate",
-				  G_CALLBACK (add_callback),
-				  provider);
-		g_object_set_data_full (G_OBJECT (item),
-					"files",
-					nautilus_file_info_list_copy (files),
-					(GDestroyNotify) nautilus_file_info_list_free);
-
-		items = g_list_append (items, item);
-	}*/
 
 	return items;
 }

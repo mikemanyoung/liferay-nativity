@@ -4,9 +4,12 @@
 #include <glib/gi18n-lib.h>
 #include "handlers.h"
 #include "logger.h"
+#include "requests.h"
 
 extern "C" void nautilus_module_initialize (GTypeModule*module)
 {
+	RequestManager::instance();
+	
 	writeLog("nautilus_module_initialize\n");
 	registerHandlers(module);
 }
