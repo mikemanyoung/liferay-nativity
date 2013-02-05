@@ -5,22 +5,22 @@
 
 G_BEGIN_DECLS
 
-#define NAUTILUS_TYPE_FR  (nautilus_fr_get_type ())
-#define NAUTILUS_FR(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), NAUTILUS_TYPE_FR, NautilusFr))
-#define NAUTILUS_IS_FR(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), NAUTILUS_TYPE_FR))
+#define NAUTILUS_TYPE_LIFERAY  (nautilus_liferay_get_type ())
+#define NAUTILUS_LIFERAY(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), NAUTILUS_TYPE_LIFERAY, NautilusLiferay))
+#define NAUTILUS_IS_LIFERAY(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), NAUTILUS_TYPE_LIFERAY))
 
-typedef struct _NautilusFr      NautilusFr;
-typedef struct _NautilusFrClass NautilusFrClass;
+typedef struct _NautilusLiferay      NautilusLiferay;
+typedef struct _NautilusLiferayClass NautilusLiferayClass;
 
-struct _NautilusFr {
+struct _NautilusLiferay {
 	GObject __parent;
 };
 
-struct _NautilusFrClass {
+struct _NautilusLiferayClass {
 	GObjectClass __parent;
 };
 
-GType nautilus_fr_get_type      (void);
+GType nautilus_liferay_get_type      (void);
 void  registerHandlers(GTypeModule *module);
 
 G_END_DECLS

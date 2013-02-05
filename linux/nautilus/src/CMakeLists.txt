@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 2.8)
 project(liferayplugin)
 
 #add_definitions(-DGETTEXT_PACKAGE="liferay-plugin")
@@ -14,7 +15,7 @@ include_directories(/usr/include/atk-1.0)
 
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
-add_library(liferayplugin SHARED plugin.cpp handlers.cpp logger.cpp socket.cpp requests.cpp)
+add_library(liferayplugin SHARED plugin.cpp handlers.cpp logger.cpp socket.cpp requests.cpp content.cpp)
 target_link_libraries(liferayplugin gobject-2.0 nautilus-extension glib-2.0 pthread)
 
 

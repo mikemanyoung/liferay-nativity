@@ -5,12 +5,14 @@
 #include <libnautilus-extension/nautilus-extension-types.h>
 #include <libnautilus-extension/nautilus-file-info.h>
 #include <libnautilus-extension/nautilus-menu-provider.h>
+#include <libnautilus-extension/nautilus-info-provider.h>
 #include "handlers.h"
 #include "logger.h"
 #include "requests.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <vector>
+#include "content.h"
 
 static GObjectClass *parent_class;
 
@@ -21,30 +23,10 @@ extern "C" void commandExecuted (NautilusMenuItem *item,
 	cmdId += boost::lexical_cast<std::string>((int)user_data);
 
 	RequestManager::instance().menuExecuted(cmdId); 
-
-/*	GList            *files, *scan;
-	NautilusFileInfo *file;
-	char             *dir;
-	GString          *cmd;
-
-	files = (GList*) g_object_get_data (G_OBJECT (item), "files");
-	file = (NautilusFileInfo*) files->data;
-
-	for (scan = files; scan; scan = scan->next)
-        {
-		NautilusFileInfo* file = (NautilusFileInfo*)scan->data;
-		char             *uri;
-
-		uri = nautilus_file_info_get_uri (file);
-		g_string_append_printf (cmd, " %s", g_shell_quote (uri));
-		g_free (uri);
-	}
-
-	g_string_free (cmd, TRUE);*/
 }
 
 
-extern "C" GList* nautilus_fr_get_file_items (NautilusMenuProvider* provider, GtkWidget* window, GList* files)
+extern "C" GList* nautilus_liferay_get_file_items (NautilusMenuProvider* provider, GtkWidget* window, GList* files)
 {
 	GList    *items = NULL;
 	GList    *scan;
@@ -64,7 +46,6 @@ extern "C" GList* nautilus_fr_get_file_items (NautilusMenuProvider* provider, Gt
 	}
 
 	std::string answer(RequestManager::instance().queryMenuItems(cmd));
-	//answer = "item1:item2,false:item3,true";
 	if (answer.empty())
 		return NULL;
 
@@ -77,7 +58,7 @@ extern "C" GList* nautilus_fr_get_file_items (NautilusMenuProvider* provider, Gt
 	writeLog("Items count: %d\n", itemsArray.size());
 
 	NautilusMenuItem *item;
-	item = nautilus_menu_item_new ("LiferayMenu",_("Liferay"),_(""),"drive-harddisk");
+	item = nautilus_menu_item_new ("LiferayMenu",ContentManager::instance().getMenuTitle().c_str(),_(""),"drive-harddisk");
 
 	items = g_list_append(items, item);
 
@@ -112,7 +93,6 @@ extern "C" GList* nautilus_fr_get_file_items (NautilusMenuProvider* provider, Gt
 		else
 		{
 			g_signal_connect(childItem, "activate", G_CALLBACK(commandExecuted), (gpointer)i);
-			//g_object_set_data_full(G_OBJECT(childItem), "files", nautilus_file_info_list_copy(files), (GDestroyNotify) 				nautilus_file_info_list_free);
 		}
 
 		nautilus_menu_append_item(menu, childItem);
@@ -122,34 +102,47 @@ extern "C" GList* nautilus_fr_get_file_items (NautilusMenuProvider* provider, Gt
 	return items;
 }
 
+extern "C" NautilusOperationResult nautilus_liferay_extension_update_file_info(NautilusInfoProvider* provider, NautilusFileInfo* file, GClosure *update_complete, NautilusOperationHandle **handle)
+{
+	char             *uri;
+	uri = nautilus_file_info_get_uri (file);
+
+	writeLog("nautilus_liferay_extension_update_file_info: %s\n", uri);
+	return NAUTILUS_OPERATION_COMPLETE;
+}
+
+extern "C" void nautilus_liferay_menu_provider_iface_init (NautilusMenuProviderIface *iface)
+{
+	iface->get_file_items = nautilus_liferay_get_file_items;
+}
 
 extern "C" void
-nautilus_fr_menu_provider_iface_init (NautilusMenuProviderIface *iface)
+nautilus_liferay_info_provider_iface_init (NautilusInfoProviderIface *iface)
 {
-	iface->get_file_items = nautilus_fr_get_file_items;
+	iface->update_file_info = nautilus_liferay_extension_update_file_info;
 }
 
 
 extern "C" void
-nautilus_fr_instance_init (NautilusFr *fr)
+nautilus_liferay_instance_init (NautilusLiferay *fr)
 {
 }
 
 
 extern "C" void
-nautilus_fr_class_init (NautilusFrClass *clazz)
+nautilus_liferay_class_init (NautilusLiferayClass *clazz)
 {
 	parent_class = (GObjectClass*) g_type_class_peek_parent (clazz);
 }
 
 
-static GType fr_type = 0;
+static GType liferay_type = 0;
 
 
 extern "C" GType 
-nautilus_fr_get_type (void)
+nautilus_liferay_get_type (void)
 {
-	return fr_type;
+	return liferay_type;
 }
 
 
@@ -158,30 +151,41 @@ extern "C" void registerHandlers(GTypeModule *module)
 	writeLog("registerHandlers entered\n");
 
 	static const GTypeInfo info = {
-		sizeof (NautilusFrClass),
+		sizeof (NautilusLiferayClass),
 		(GBaseInitFunc) NULL,
 		(GBaseFinalizeFunc) NULL,
-		(GClassInitFunc) nautilus_fr_class_init,
+		(GClassInitFunc) nautilus_liferay_class_init,
 		NULL,
 		NULL,
-		sizeof (NautilusFr),
+		sizeof (NautilusLiferay),
 		0,
-		(GInstanceInitFunc) nautilus_fr_instance_init,
+		(GInstanceInitFunc) nautilus_liferay_instance_init,
 	};
 
 	static const GInterfaceInfo menu_provider_iface_info = {
-		(GInterfaceInitFunc) nautilus_fr_menu_provider_iface_init,
+		(GInterfaceInitFunc) nautilus_liferay_menu_provider_iface_init,
 		NULL,
 		NULL
 	};
 
-	fr_type = g_type_module_register_type (module, G_TYPE_OBJECT,"LiferayPlugin", &info,(GTypeFlags) 0);
+	static const GInterfaceInfo info_provider_iface_info = {
+		(GInterfaceInitFunc) nautilus_liferay_info_provider_iface_init,
+		NULL,
+		NULL
+	};
 
-	writeLog("g_type_module_register_type returned %d\n", fr_type);
+	liferay_type = g_type_module_register_type (module, G_TYPE_OBJECT,"LiferayPlugin", &info,(GTypeFlags) 0);
+
+	writeLog("g_type_module_register_type returned %d\n", liferay_type);
 
 	g_type_module_add_interface (module,
-				     fr_type,
+				     liferay_type,
 				     NAUTILUS_TYPE_MENU_PROVIDER,
 				     &menu_provider_iface_info);
+
+	g_type_module_add_interface (module,
+	                             liferay_type,
+	                             NAUTILUS_TYPE_INFO_PROVIDER,
+	                             &info_provider_iface_info);
 }
 

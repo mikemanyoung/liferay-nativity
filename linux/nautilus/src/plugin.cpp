@@ -26,7 +26,7 @@ extern "C" void nautilus_module_list_types (const GType** types, int* num_types)
 
 	static GType type_list[1];
 
-	type_list[0] = NAUTILUS_TYPE_FR;
+	type_list[0] = NAUTILUS_TYPE_LIFERAY;
 	*types = type_list;
 	*num_types = 1;
 }

@@ -1,6 +1,8 @@
 #include "requests.h"
 #include "logger.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#include "content.h"
 
 RequestManager::RequestManager() :
 	callbackSocket_(2, 33002, NULL),
@@ -77,6 +79,10 @@ void RequestManager::onStringReceived(int serverId, const std::string& text)
 
 void RequestManager::execSetFileIconCmd(const std::vector<std::string>& cmdData)
 {
+	if (cmdData.size() != 3)
+		return;
+    
+	ContentManager::instance().setIconForFile(cmdData[1], boost::lexical_cast<int>(cmdData[2]));
 	commandSocket_.writeString("1");
 }
 
@@ -87,6 +93,10 @@ void RequestManager::execSetFileIconsCmd(const std::vector<std::string>& cmdData
 
 void RequestManager::execRemoveFileIconCmd(const std::vector<std::string>& cmdData)
 {
+	if (cmdData.size() != 2)
+		return;
+    
+	ContentManager::instance().removeFileIcon(cmdData[1]);
 	commandSocket_.writeString("1");
 }
 
@@ -97,21 +107,31 @@ void RequestManager::execRemoveFileIconsCmd(const std::vector<std::string>& cmdD
 
 void RequestManager::execEnableOverlaysCmd(const std::vector<std::string>& cmdData)
 {
+	ContentManager::instance().enableOverlays(boost::lexical_cast<int>(cmdData[1]) != 0);
 	commandSocket_.writeString("1");
 }
 
 void RequestManager::execRegisterIconCmd(const std::vector<std::string>& cmdData)
 {
-	commandSocket_.writeString("1");
+	if (cmdData.size() != 2)
+		return;
+    
+	int index = ContentManager::instance().registerIcon(cmdData[1]);
+    	commandSocket_.writeString(boost::lexical_cast<std::string>(index));
 }
 
 void RequestManager::execUnregisterIconCmd(const std::vector<std::string>& cmdData)
 {
+	if (cmdData.size() != 2)
+		return;
+    
+	ContentManager::instance().unregisterIcon(boost::lexical_cast<int>(cmdData[1]));
 	commandSocket_.writeString("1");
 }
 
 void RequestManager::execSetMenuTitleCmd(const std::vector<std::string>& cmdData)
 {
+	ContentManager::instance().setMenuTitle(cmdData[1]);
 	commandSocket_.writeString("1");
 }
 
