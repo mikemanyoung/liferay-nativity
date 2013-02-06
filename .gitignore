@@ -6,3 +6,12 @@ tmp
 java/bin
 java/classes
 java/dist
+java/.settings
+
+windows/LiferayNativityShellExtensions/ipch
+
+windows/LiferayNativityShellExtensions/*.opensdf
+windows/LiferayNativityShellExtensions/Release
+windows/LiferayNativityShellExtensions/Debug
+windows/LiferayNativityShellExtensions/LiferayNativityWindowsUtil/Release
+windows/LiferayNativityShellExtensions/LiferayNativityWindowsUtil/Debug
