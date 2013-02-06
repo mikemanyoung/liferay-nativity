@@ -25,14 +25,15 @@ import org.slf4j.LoggerFactory;
  * @author Gail Hernandez
  */
 public class AppPropsUtil {
+
 	public static String getProperty(String key) {
 		if (_properties.isEmpty()) {
 			try {
-				InputStream in = ClassLoader.getSystemResourceAsStream(
+				InputStream is = ClassLoader.getSystemResourceAsStream(
 					"test-config.properties");
 
-				if (in != null) {
-					_properties.load(in);
+				if (is != null) {
+					_properties.load(is);
 				}
 				else {
 					_logger.error("Unable to read test-config.properties");

@@ -21,13 +21,13 @@ public class AppPropsKeys {
 
 	public static final String NVTY_APPLICATION_PATH = "application-path";
 
-	public static final String NVTY_LIFERAY_NATIVITY_UTIL_DEFAULT = 
-		"LiferayNativityWindowsUtil_x64";
-	
-	public static final String NVTY_LIFERAY_NATIVITY_UTIL_86 = 
-		"LiferayNativityWindowsUtil_x86.dll";
-	
-	public static final String NVTY_LIFERAY_NATIVITY_UTIL_64 = 
+	public static final String NVTY_LIFERAY_NATIVITY_UTIL_64 =
 		"LiferayNativityWindowsUtil_x64.dll";
+
+	public static final String NVTY_LIFERAY_NATIVITY_UTIL_86 =
+		"LiferayNativityWindowsUtil_x86.dll";
+
+	public static final String NVTY_LIFERAY_NATIVITY_UTIL_DEFAULT =
+		"LiferayNativityWindowsUtil_x64";
 
 }
