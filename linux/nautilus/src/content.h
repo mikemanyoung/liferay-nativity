@@ -2,6 +2,7 @@
 #define __CONTENT_H__
 
 #include <map>
+#include <set>
 #include <string>
 
 class ContentManager
@@ -28,6 +29,7 @@ private:
 
 	bool overlaysEnabled_;
 	std::string menuTitle_;
+	mutable std::set<std::string> registeredFolders_;
 	
 	ContentManager();
 	~ContentManager();

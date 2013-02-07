@@ -1,4 +1,13 @@
+#include "config.h"
 #include "content.h"
+#include <glib-object.h>
+#include <glib/gi18n-lib.h>
+#include <gio/gio.h>
+#include <libnautilus-extension/nautilus-extension-types.h>
+#include <libnautilus-extension/nautilus-file-info.h>
+#include <libnautilus-extension/nautilus-menu-provider.h>
+#include <libnautilus-extension/nautilus-info-provider.h>
+#include "logger.h"
 
 ContentManager::ContentManager() :
 	lastIconId_(0),
@@ -27,7 +36,35 @@ std::string ContentManager::getFileIconName(const std::string& fileName) const
 	if (itName == icons_.end())
 		return "";
 
-	return itName->second;
+	std::string folder(itName->second);
+	std::string icon(itName->second);
+
+	size_t pos = folder.find_last_of("/");
+	if (pos != folder.npos)
+	{
+		folder.erase(pos,folder.npos);
+		icon.erase(0, pos + 1);
+	}
+
+	if (!folder.empty())
+	{
+		if (registeredFolders_.find(folder) == registeredFolders_.end())
+		{
+			GtkIconTheme *theme = gtk_icon_theme_get_default();
+
+			writeLog("add folder to gtk theme (%x) paths: %s", theme, folder.c_str());
+			gtk_icon_theme_append_search_path(theme, folder.c_str());
+
+			registeredFolders_.insert(folder);
+		}
+	}
+
+	pos = icon.find_last_of(".");
+	if (pos != icon.npos)
+		icon.erase(pos, icon.npos);
+
+
+	return icon;
 }
 
 void ContentManager::setIconForFile(const std::string& fileName, int icon)
@@ -44,6 +81,8 @@ int ContentManager::registerIcon(const std::string& fileName)
 {
 	lastIconId_++;
 	icons_[lastIconId_] = fileName;
+
+	return lastIconId_;
 }
 
 void ContentManager::unregisterIcon(int iconId)

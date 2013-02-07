@@ -107,7 +107,8 @@ extern "C" NautilusOperationResult nautilus_liferay_extension_update_file_info(N
 	char             *uri;
 	uri = nautilus_file_info_get_uri (file);
 
-	writeLog("nautilus_liferay_extension_update_file_info: %s\n", uri);
+	nautilus_file_info_add_emblem(file, ContentManager::instance().getFileIconName(g_filename_from_uri(uri,NULL,NULL)).c_str());
+
 	return NAUTILUS_OPERATION_COMPLETE;
 }
 

@@ -88,6 +88,12 @@ void RequestManager::execSetFileIconCmd(const std::vector<std::string>& cmdData)
 
 void RequestManager::execSetFileIconsCmd(const std::vector<std::string>& cmdData)
 {
+	if (cmdData.size() < 3)
+		return;
+    
+	for (int i = 1; i < cmdData.size() - 1; i += 2)
+		ContentManager::instance().setIconForFile(cmdData[i], boost::lexical_cast<int>(cmdData[i+1]));
+	
 	commandSocket_.writeString("1");
 }
 
@@ -102,6 +108,12 @@ void RequestManager::execRemoveFileIconCmd(const std::vector<std::string>& cmdDa
 
 void RequestManager::execRemoveFileIconsCmd(const std::vector<std::string>& cmdData)
 {
+	if (cmdData.size() < 2)
+		return;
+
+	for (int i = 1; i < cmdData.size(); ++i)
+    		ContentManager::instance().removeFileIcon(cmdData[i]);
+
 	commandSocket_.writeString("1");
 }
 
