@@ -17,7 +17,7 @@ include_directories(/usr/include/atk-1.0)
 
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
-add_library(liferayplugin SHARED plugin.cpp handlers.cpp logger.cpp socket.cpp requests.cpp content.cpp)
+add_library(liferayplugin SHARED plugin.cpp handlers.cpp logger.cpp socket.cpp requests.cpp content.cpp sync.cpp)
 target_link_libraries(liferayplugin gobject-2.0 nautilus-extension glib-2.0 pthread ${GTK2_LIBRARIES})
 
 
