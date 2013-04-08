@@ -23,42 +23,53 @@ import java.util.List;
 /**
  * @author Dennis Ju
  */
-public abstract class ContextMenuControlBase {
+public abstract class ContextMenuControlBase implements ContextMenuControl {
 
-	public ContextMenuControlBase(NativityControl pluginControl) {
-		this.pluginControl = pluginControl;
+	public ContextMenuControlBase(
+		NativityControl nativityControl,
+		ContextMenuControlCallback contextMenuControlCallback) {
+
+		this.nativityControl = nativityControl;
+		this.contextMenuControlCallback = contextMenuControlCallback;
 
 		_menuItemListeners = new ArrayList<MenuItemListener>();
 	}
 
+	@Override
 	public void addMenuItemListener(MenuItemListener listener) {
 		_menuItemListeners.add(listener);
 	}
 
-	public void fireMenuItemListeners(
-		int menuIndex, String menuText, String[] paths) {
-
+	@Override
+	public void fireMenuItemListeners(String menuText, String[] paths) {
 		for (MenuItemListener menuItemListener : _menuItemListeners) {
-			menuItemListener.onMenuItemSelected(menuIndex, menuText, paths);
+			menuItemListener.onMenuItemSelected(menuText, paths);
 		}
 	}
 
-	public abstract String[] getHelpItemsForMenus(String[] paths);
+	@Override
+	public String[] getHelpItemsForMenus(String[] paths) {
+		return contextMenuControlCallback.getHelpItemsForMenus(paths);
+	}
 
-	public abstract String[] getMenuItems(String[] paths);
+	@Override
+	public String[] getMenuItems(String[] paths) {
+		return contextMenuControlCallback.getMenuItems(paths);
+	}
 
+	@Override
 	public void removeAllMenuItemListeners() {
 		_menuItemListeners.clear();
 	}
 
+	@Override
 	public void removeMenuItemListener(MenuItemListener menuItemListener) {
 		_menuItemListeners.remove(menuItemListener);
 	}
 
-	public abstract void setContextMenuTitle(String title);
+	protected ContextMenuControlCallback contextMenuControlCallback;
+	protected NativityControl nativityControl;
 
-	protected List<MenuItemListener> _menuItemListeners;
-
-	protected NativityControl pluginControl;
+	private List<MenuItemListener> _menuItemListeners;
 
 }

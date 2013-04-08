@@ -14,53 +14,33 @@
 
 package com.liferay.nativity.control;
 
-import com.liferay.nativity.control.linux.LinuxNativityControlImpl;
-import com.liferay.nativity.control.mac.AppleNativityControlImpl;
-import com.liferay.nativity.control.win.WindowsNativityControlImpl;
-import com.liferay.nativity.util.OSDetector;
+import com.liferay.nativity.listeners.SocketCloseListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Dennis Ju
  */
 public abstract class NativityControl {
 
-	/**
-	 * Factory method to get an instance of NativityPluginControl
-	 *
-	 * @return implementation of NativityPluginControl instance based on the
-	 * user's operating system. Returns null for unsupported operating systems.
-	 */
-	public static NativityControl getNativityControl() {
-		if (_nativityControl == null) {
-			if (OSDetector.isApple()) {
-				_nativityControl = new AppleNativityControlImpl();
-			}
-			else if (OSDetector.isWindows()) {
-				_nativityControl = new WindowsNativityControlImpl();
-			}
-			else if (OSDetector.isLinux()) {
-				_nativityControl = new LinuxNativityControlImpl();
-			}
-			else {
-				_logger.error(
-					"NativityControl does not support {}",
-					System.getProperty("os.name"));
-
-				_nativityControl = null;
-			}
-		}
-
-		return _nativityControl;
-	}
-
 	public NativityControl() {
 		_commandMap = new HashMap<String, MessageListener>();
+		socketCloseListeners = new ArrayList<SocketCloseListener>();
+	}
+
+	/**
+	 * Mac only
+	 *
+	 * Adds a SocketCloserListener that will be triggered when the socket
+	 * connection to the native service is closed
+	 *
+	 * @param SocketCloseListener instance
+	 */
+	public void addSocketCloseListener(SocketCloseListener listener) {
+		socketCloseListeners.add(listener);
 	}
 
 	/**
@@ -111,6 +91,17 @@ public abstract class NativityControl {
 	}
 
 	/**
+	 * Mac only
+	 *
+	 * Removes a previously added SocketCloserListener instance
+	 *
+	 * @param SocketCloseListener instance to remove
+	 */
+	public void removeSocketCloseListener(SocketCloseListener listener) {
+		socketCloseListeners.remove(listener);
+	}
+
+	/**
 	 * Checks if the native service is running
 	 *
 	 * @return true if native service is running
@@ -158,10 +149,7 @@ public abstract class NativityControl {
 	 */
 	public abstract boolean startPlugin(String path) throws Exception;
 
-	private static Logger _logger = LoggerFactory.getLogger(
-		NativityControl.class.getName());
-
-	private static NativityControl _nativityControl;
+	protected List<SocketCloseListener> socketCloseListeners;
 
 	private Map<String, MessageListener> _commandMap;
 
