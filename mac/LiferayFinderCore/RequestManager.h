@@ -37,6 +37,7 @@
 
 - (void)menuItemClicked:(NSNumber*)item withTitle:(NSString*)title;
 - (NSArray*)menuItemsForFiles:(NSArray*)files;
+//- (NSDictionary*)menuItemsForFiles:(NSArray*)files;
 - (void)start;
 
 @end

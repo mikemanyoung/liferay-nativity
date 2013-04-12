@@ -176,7 +176,7 @@
 	[self replyString:@"1" toSocket:sock];
 }
 
-- (void)menuItemClicked:(NSNumber*)item withTitle:(NSString*)title
+- (void)menuItemClicked:(NSNumber*)menuItemId withTitle:(NSString*)title
 {
 	if (callbackSocket == nil)
 	{
@@ -186,7 +186,13 @@
 	NSDictionary* menuExecDictionary = [[NSMutableDictionary alloc] init];
 
 	[menuExecDictionary setValue:@"menuExec" forKey:@"command"];
-	[menuExecDictionary setValue:title forKey:@"value"];
+	
+	NSDictionary* valueDictionary = [[NSMutableDictionary alloc] init];
+	
+	[valueDictionary setValue:title forKey:@"title"];
+	[valueDictionary setValue:menuItemId forKey:@"id"];
+	
+	[menuExecDictionary setValue:valueDictionary forKey:@"value"];
 
 	NSString* jsonString = [menuExecDictionary JSONString];
 
@@ -196,48 +202,95 @@
 	[callbackSocket writeData:data withTimeout:-1 tag:0];
 }
 
+//- (NSArray*)menuItemsForFiles:(NSArray*)files
+//{
+//	if (callbackSocket == nil)
+//	{
+//		return nil;
+//	}
+//
+//    if (rootFolder)
+//    {
+//        NSString* file = [files objectAtIndex:0];
+//
+//        if (![file hasPrefix:rootFolder])
+//        {
+//            return nil;
+//        }
+//    }
+//
+//	NSDictionary* menuQueryDictionary = [[NSMutableDictionary alloc] init];
+//
+//	[menuQueryDictionary setValue:@"menuQuery" forKey:@"command"];
+//	[menuQueryDictionary setValue:files forKey:@"value"];
+//
+//	NSString* jsonString = [menuQueryDictionary JSONString];
+//
+//	NSData* data = [[jsonString stringByAppendingString:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding];
+//	[data retain];
+//
+//	[callbackSocket writeData:data withTimeout:-1 tag:0];
+//
+//	NSRunLoop* runLoop = [NSRunLoop currentRunLoop];
+//
+//	callbackMsg = nil;
+//
+//	while (callbackMsg == nil)
+//	{
+//		[runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+//
+//		if (callbackSocket == nil) {
+//			return nil;
+//		}
+//	}
+//
+//    NSDictionary* responseDictionary = [callbackMsg objectFromJSONString];
+//
+//	return (NSArray*)[responseDictionary objectForKey:@"value"];
+//}
+
 - (NSArray*)menuItemsForFiles:(NSArray*)files
 {
 	if (callbackSocket == nil)
 	{
 		return nil;
 	}
-
+	
     if (rootFolder)
     {
         NSString* file = [files objectAtIndex:0];
-
+		
         if (![file hasPrefix:rootFolder])
         {
             return nil;
         }
     }
-
+	
 	NSDictionary* menuQueryDictionary = [[NSMutableDictionary alloc] init];
-
+	
 	[menuQueryDictionary setValue:@"menuQuery" forKey:@"command"];
 	[menuQueryDictionary setValue:files forKey:@"value"];
-
+	
 	NSString* jsonString = [menuQueryDictionary JSONString];
-
+	
 	NSData* data = [[jsonString stringByAppendingString:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding];
 	[data retain];
-
+	
 	[callbackSocket writeData:data withTimeout:-1 tag:0];
-
+	
 	NSRunLoop* runLoop = [NSRunLoop currentRunLoop];
-
+	
 	callbackMsg = nil;
-
+	
 	while (callbackMsg == nil)
 	{
 		[runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
-
+		
 		if (callbackSocket == nil) {
 			return nil;
 		}
 	}
-
+	
     NSDictionary* responseDictionary = [callbackMsg objectFromJSONString];
 
 	return (NSArray*)[responseDictionary objectForKey:@"value"];

@@ -47,76 +47,101 @@ static MenuManager* sharedInstance = nil;
 
 - (void)addItemsToMenu:(TContextMenu*)menu forPaths:(NSArray*)selectedItems
 {
-	NSArray* items = [[RequestManager sharedInstance] menuItemsForFiles:selectedItems];
-
-	if (items == nil)
+    NSArray* menuItemsArray = [[RequestManager sharedInstance] menuItemsForFiles:selectedItems];
+    
+	if (menuItemsArray == nil)
 	{
 		return;
 	}
+    
+    if ([menuItemsArray count] == 0)
+    {
+        return;
+    }
 
-	if ([items count] == 0)
-	{
-		return;
-	}
+    NSInteger menuIndex = 4;
+    
+    BOOL hasSeparatorBefore = [[menu itemAtIndex:menuIndex - 1] isSeparatorItem];
 
-	NSString* firstElement = [items objectAtIndex:0];
+    if (!hasSeparatorBefore)
+    {
+        [menu insertItem:[NSMenuItem separatorItem] atIndex:menuIndex];        
+    }
 
-	if ([firstElement isEqualToString:@""])
-	{
-		return;
-	}
+    for (int i = 0; i < [menuItemsArray count]; ++i)
+    {
+        NSDictionary* menuItemDictionary = [menuItemsArray objectAtIndex:i];
 
-	NSInteger menuIndex = 2;
+        NSString* mainMenuTitle = [menuItemDictionary objectForKey:@"title"];
+        
+        if ([mainMenuTitle isEqualToString:@""])
+        {
+            continue;
+        }
+        
+        menuIndex++;
 
-	BOOL hasSeparatorBefore = [[menu itemAtIndex:menuIndex - 1] isSeparatorItem];
-	BOOL hasSeparatorAfter = [[menu itemAtIndex:menuIndex] isSeparatorItem];
+        NSArray* childrenSubMenuItems = (NSArray*)[menuItemDictionary objectForKey:@"contextMenuItems"];
 
-	if (!hasSeparatorAfter)
-	{
-		[menu insertItem:[NSMenuItem separatorItem] atIndex:menuIndex];
-	}
+        if (childrenSubMenuItems != nil && [childrenSubMenuItems count] != 0) {
+            NSMenuItem* mainMenuItem = [menu insertItemWithTitle:mainMenuTitle action:nil keyEquivalent:@"" atIndex:menuIndex];
+           
+            [self addChildrenSubMenuItems:mainMenuItem withChildren:childrenSubMenuItems];
+        }
+        else
+        {
+            NSMenuItem* mainMenuItem = [menu insertItemWithTitle:mainMenuTitle action:@selector(menuItemClicked:) keyEquivalent:@"" atIndex:menuIndex];
+            
+            if ([[menuItemDictionary objectForKey:@"enabled"] boolValue]) {
+                [mainMenuItem setTarget:self];
+            }
+            
+            [mainMenuItem setRepresentedObject:[menuItemDictionary objectForKey:@"id"]];
+        }
+    }
+    
+    BOOL hasSeparatorAfter = [[menu itemAtIndex:menuIndex + 1] isSeparatorItem];
+    
+    if (!hasSeparatorAfter)
+    {
+        [menu insertItem:[NSMenuItem separatorItem] atIndex:menuIndex + 1];
+    }
+}
 
-	NSMenuItem* mainMenu = [menu insertItemWithTitle:menuTitle action:nil keyEquivalent:@"" atIndex:menuIndex];
+-(void)addChildrenSubMenuItems:(NSMenuItem*)parentMenuItem withChildren:(NSArray*)childrenMenuItemsDictionary
+{
+    NSMenu* submenu = [[NSMenu alloc] init];
+    
+    for (int i = 0; i < [childrenMenuItemsDictionary count]; ++i)
+    {
+        NSDictionary* submenuDictionary = [childrenMenuItemsDictionary objectAtIndex:i];
+        
+        NSString* submenuTitle = [submenuDictionary objectForKey:@"title"];
+        
+        NSArray* childrenSubMenuItems = (NSArray*)[submenuDictionary objectForKey:@"contextMenuItems"];
 
-	if (!hasSeparatorBefore)
-	{
-		[menu insertItem:[NSMenuItem separatorItem] atIndex:menuIndex];
-	}
+        if ([submenuTitle isEqualToString:@"_SEPARATOR_"])
+        {
+            [submenu addItem:[NSMenuItem separatorItem]];
+        }
+        else if (childrenSubMenuItems != nil && [childrenSubMenuItems count] != 0) {
+            NSMenuItem* submenuItem = [submenu addItemWithTitle:submenuTitle action:nil keyEquivalent:@""];
 
-	NSMenu* submenu = [[NSMenu alloc] init];
-
-	for (int i = 0; i < [items count]; ++i)
-	{
-		NSString* itemTitle = [items objectAtIndex:i];
-		NSArray* titleElements = [itemTitle componentsSeparatedByString:@","];
-
-		if ([itemTitle isEqualToString:@"_SEPARATOR_"])
-		{
-			[submenu addItem:[NSMenuItem separatorItem]];
-		}
-		else
-		{
-			NSMenuItem* menuItem = [submenu addItemWithTitle:[titleElements objectAtIndex:0] action:@selector(menuItemClicked:) keyEquivalent:@""];
-
-			if ([titleElements count] > 1)
-			{
-				NSString* state = [titleElements objectAtIndex:1];
-
-				if ([state isEqualToString:@"true"])
-				{
-					[menuItem setTarget:self];
-				}
-			}
-			else
-			{
-				[menuItem setTarget:self];
-			}
-
-			[menuItem setRepresentedObject:[NSNumber numberWithInt:i]];
-		}
-	}
-
-	[mainMenu setSubmenu:submenu];
+            [self addChildrenSubMenuItems:submenuItem withChildren:childrenSubMenuItems];
+        }
+        else
+        {
+            NSMenuItem* submenuItem = [submenu addItemWithTitle:submenuTitle action:@selector(menuItemClicked:) keyEquivalent:@""];
+            
+            if ([[submenuDictionary objectForKey:@"enabled"] boolValue]) {
+                [submenuItem setTarget:self];
+            }
+            
+            [submenuItem setRepresentedObject:[submenuDictionary objectForKey:@"id"]];
+        }
+    }
+    
+    [parentMenuItem setSubmenu:submenu];
 }
 
 - (void)menuItemClicked:(id)param
