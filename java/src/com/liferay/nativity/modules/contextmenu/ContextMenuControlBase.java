@@ -15,7 +15,7 @@
 package com.liferay.nativity.modules.contextmenu;
 
 import com.liferay.nativity.control.NativityControl;
-import com.liferay.nativity.modules.contextmenu.listeners.MenuItemListener;
+import com.liferay.nativity.modules.contextmenu.model.ContextMenuItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,19 +31,18 @@ public abstract class ContextMenuControlBase implements ContextMenuControl {
 
 		this.nativityControl = nativityControl;
 		this.contextMenuControlCallback = contextMenuControlCallback;
-
-		_menuItemListeners = new ArrayList<MenuItemListener>();
+		
+		_contextMenuItems = new ArrayList<ContextMenuItem>();
 	}
 
 	@Override
-	public void addMenuItemListener(MenuItemListener listener) {
-		_menuItemListeners.add(listener);
-	}
-
-	@Override
-	public void fireMenuItemListeners(String menuText, String[] paths) {
-		for (MenuItemListener menuItemListener : _menuItemListeners) {
-			menuItemListener.onMenuItemSelected(menuText, paths);
+	public void fireAction(long id, String menuText, String[] paths) {
+		for (ContextMenuItem contextMenuItem : _contextMenuItems) {
+			if (contextMenuItem.getId() == id) {
+				contextMenuItem.fireActions(paths);
+				
+				break;
+			}
 		}
 	}
 
@@ -52,24 +51,27 @@ public abstract class ContextMenuControlBase implements ContextMenuControl {
 		return contextMenuControlCallback.getHelpItemsForMenus(paths);
 	}
 
+//	@Override
+//	public String[] getMenuItems(String[] paths) {
+//		return contextMenuControlCallback.getMenuItems(paths);
+//	}
+	
 	@Override
-	public String[] getMenuItems(String[] paths) {
-		return contextMenuControlCallback.getMenuItems(paths);
-	}
+	public List<ContextMenuItem> getMenuItem(String[] paths) {
+		List<ContextMenuItem> contextMenuItems = contextMenuControlCallback.getMenuItem(paths);
 
-	@Override
-	public void removeAllMenuItemListeners() {
-		_menuItemListeners.clear();
-	}
+		_contextMenuItems.clear();
 
-	@Override
-	public void removeMenuItemListener(MenuItemListener menuItemListener) {
-		_menuItemListeners.remove(menuItemListener);
+		for (ContextMenuItem contextMenuItem : contextMenuItems) {
+			_contextMenuItems.addAll(contextMenuItem.getAllContextMenuItems());			
+		}
+
+		return contextMenuItems;
 	}
 
 	protected ContextMenuControlCallback contextMenuControlCallback;
 	protected NativityControl nativityControl;
 
-	private List<MenuItemListener> _menuItemListeners;
+	private List<ContextMenuItem> _contextMenuItems;
 
 }

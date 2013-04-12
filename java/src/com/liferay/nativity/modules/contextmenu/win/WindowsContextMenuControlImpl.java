@@ -20,6 +20,7 @@ import com.liferay.nativity.control.NativityControl;
 import com.liferay.nativity.control.NativityMessage;
 import com.liferay.nativity.modules.contextmenu.ContextMenuControlBase;
 import com.liferay.nativity.modules.contextmenu.ContextMenuControlCallback;
+import com.liferay.nativity.modules.contextmenu.model.ContextMenuItem;
 
 import java.util.List;
 
@@ -42,7 +43,10 @@ public class WindowsContextMenuControlImpl extends ContextMenuControlBase {
 				@SuppressWarnings("unchecked")
 				List<String> args = (List<String>)message.getValue();
 
-				String[] menuItems = getMenuItems(
+//				String[] menuItems = getMenuItems(
+//					args.toArray(new String[args.size()]));
+				
+				List<ContextMenuItem> menuItems = getMenuItem(
 					args.toArray(new String[args.size()]));
 
 				return new NativityMessage(Constants.GET_MENU_LIST, menuItems);
@@ -77,7 +81,7 @@ public class WindowsContextMenuControlImpl extends ContextMenuControlBase {
 
 				String title = args.remove(0);
 
-				fireMenuItemListeners(
+				fireAction(0,
 					title, args.toArray(new String[args.size()]));
 
 				return null;
@@ -87,12 +91,12 @@ public class WindowsContextMenuControlImpl extends ContextMenuControlBase {
 		nativityControl.registerMessageListener(performActionMessageListener);
 	}
 
-	@Override
-	public void setContextMenuTitle(String title) {
-		NativityMessage message = new NativityMessage(
-			Constants.SET_MENU_TITLE, title);
-
-		nativityControl.sendMessage(message);
-	}
+//	@Override
+//	public void setContextMenuTitle(String title) {
+//		NativityMessage message = new NativityMessage(
+//			Constants.SET_MENU_TITLE, title);
+//
+//		nativityControl.sendMessage(message);
+//	}
 
 }

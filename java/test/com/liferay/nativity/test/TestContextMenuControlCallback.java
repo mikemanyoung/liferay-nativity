@@ -15,6 +15,7 @@
 package com.liferay.nativity.test;
 
 import com.liferay.nativity.modules.contextmenu.ContextMenuControlCallback;
+import com.liferay.nativity.modules.contextmenu.model.ContextMenuItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,19 +45,24 @@ public class TestContextMenuControlCallback
 		return items.toArray(new String[0]);
 	}
 
+//	@Override
+//	public String[] getMenuItems(String[] paths) {
+//		_logger.debug("getMenuItems {}", paths);
+//
+//		int count = _random.nextInt(20) + 3;
+//
+//		List<String> items = new ArrayList<String>();
+//
+//		for (int i = 0; i < count; i++) {
+//			items.add("Menu " + i);
+//		}
+//
+//		return items.toArray(new String[0]);
+//	}
+	
 	@Override
-	public String[] getMenuItems(String[] paths) {
-		_logger.debug("getMenuItems {}", paths);
-
-		int count = _random.nextInt(20) + 3;
-
-		List<String> items = new ArrayList<String>();
-
-		for (int i = 0; i < count; i++) {
-			items.add("Menu " + i);
-		}
-
-		return items.toArray(new String[0]);
+	public List<ContextMenuItem> getMenuItem(String[] paths) {
+		return null;
 	}
 
 	private static Logger _logger = LoggerFactory.getLogger(

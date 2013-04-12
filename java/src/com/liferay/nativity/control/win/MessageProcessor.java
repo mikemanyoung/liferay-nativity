@@ -14,10 +14,10 @@
 
 package com.liferay.nativity.control.win;
 
-import com.liferay.nativity.control.NativityMessage;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import flexjson.JSONDeserializer;
-import flexjson.JSONSerializer;
+import com.liferay.nativity.control.NativityMessage;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -26,8 +26,6 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 
 import java.nio.charset.Charset;
-
-import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,13 +83,8 @@ public class MessageProcessor implements Runnable {
 	private void _handle(String receivedMessage) throws IOException {
 		_logger.debug("Message {}", receivedMessage);
 
-		JSONDeserializer<NativityMessage> jsonDeserializer =
-			new JSONDeserializer<NativityMessage>();
-
-		jsonDeserializer.use("value", ArrayList.class);
-
 		try {
-			NativityMessage message = jsonDeserializer.deserialize(
+			NativityMessage message = _objectMapper.readValue(
 				receivedMessage, NativityMessage.class);
 
 			NativityMessage responseMessage = _nativityControl.fireOnMessage(
@@ -103,13 +96,7 @@ public class MessageProcessor implements Runnable {
 				_returnEmpty();
 			}
 			else {
-				String response =
-					_jsonSerializer.exclude("*.class")
-						.deepSerialize(responseMessage);
-
-				_logger.debug("Response {}",response);
-
-				_outputStreamWriter.write(response);
+				_objectMapper.writeValue(_outputStreamWriter, responseMessage);
 				_outputStreamWriter.write("\0");
 			}
 		}
@@ -148,10 +135,12 @@ public class MessageProcessor implements Runnable {
 		}
 	}
 
-	private static JSONSerializer _jsonSerializer = new JSONSerializer();
-
 	private static Logger _logger = LoggerFactory.getLogger(
 		MessageProcessor.class.getName());
+
+	private static ObjectMapper _objectMapper =
+		new ObjectMapper().configure(
+			JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
 
 	private Socket _clientSocket;
 	private InputStreamReader _inputStreamReader;

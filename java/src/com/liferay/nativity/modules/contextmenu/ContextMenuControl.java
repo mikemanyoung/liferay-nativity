@@ -14,20 +14,10 @@
 
 package com.liferay.nativity.modules.contextmenu;
 
-import com.liferay.nativity.modules.contextmenu.listeners.MenuItemListener;
-
 /**
  * @author Dennis Ju
  */
 public interface ContextMenuControl extends ContextMenuControlCallback {
-
-	/**
-	 * Adds a MenuItemListener to respond to menu item selections.
-	 * Multiple listeners can be added.
-	 *
-	 * @param listener to respond to menu item selections
-	 */
-	public void addMenuItemListener(MenuItemListener menuItemListener);
 
 	/**
 	 * Notifies all MenuItemListener instances when a menu item is selected
@@ -38,26 +28,6 @@ public interface ContextMenuControl extends ContextMenuControlCallback {
 	 *
 	 * @param array of selected file paths
 	 */
-	public void fireMenuItemListeners(String menuText, String[] paths);
-
-	/**
-	 * Removes all MenuItemListeners
-	 */
-	public void removeAllMenuItemListeners();
-
-	/**
-	 * Removes a MenuItemListener
-	 *
-	 * @param the MenuItemListener to remove
-	 */
-	public void removeMenuItemListener(MenuItemListener menuItemListener);
-
-	/**
-	 * Set title of root context menu item, all other items will be added as
-	 * children of it
-	 *
-	 * @param title of context menu
-	 */
-	public void setContextMenuTitle(String title);
+	public void fireAction(long id, String menuText, String[] paths);
 
 }

@@ -12,20 +12,13 @@
  * details.
  */
 
-package com.liferay.nativity.modules.contextmenu.listeners;
+package com.liferay.nativity.modules.contextmenu.model;
 
 /**
  * @author Dennis Ju
  */
-public abstract class MenuItemListener {
+public abstract class Action {
 
-	/**
-	 * Called when a context menu item is selected
-	 *
-	 * @param text value of the selected menu item
-	 *
-	 * @param array of selected file paths
-	 */
-	public abstract void onMenuItemSelected(String menuText, String[] paths);
+	public abstract void onSelection(String[] paths);
 
 }
