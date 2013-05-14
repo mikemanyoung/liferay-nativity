@@ -91,12 +91,12 @@ public class ContextMenuItem {
 		return _helpText;
 	}
 
-	public String getUuid() {
-		return _uuid;
-	}
-
 	public String getTitle() {
 		return _title;
+	}
+
+	public String getUuid() {
+		return _uuid;
 	}
 
 	public boolean removeContextMenuItem(ContextMenuItem menuItem) {
@@ -142,7 +142,7 @@ public class ContextMenuItem {
 	private List<ContextMenuItem> _contextMenuItems;
 	private boolean _enabled;
 	private String _helpText;
-	private String _uuid;
 	private String _title;
+	private String _uuid;
 
 }
