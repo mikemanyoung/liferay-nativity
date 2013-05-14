@@ -14,21 +14,14 @@
 
 package com.liferay.nativity.modules.contextmenu;
 
+import com.liferay.nativity.modules.contextmenu.model.ContextMenuItem;
+
+import java.util.List;
+
 /**
  * @author Dennis Ju
  */
 public interface ContextMenuControlCallback {
-
-	/**
-	 * Windows only
-	 *
-	 * Called by the native service to request the help text for menu items
-	 *
-	 * @param the files selected for the help text
-	 *
-	 * @return array of help text titles corresponding to the menu items
-	 */
-	public abstract String[] getHelpItemsForMenus(String[] paths);
 
 	/**
 	 * Called by the native service to request the menu items for a context
@@ -36,8 +29,9 @@ public interface ContextMenuControlCallback {
 	 *
 	 * @param the files selected for this context menu popup
 	 *
-	 * @return array of menu item titles to populate the context menu
+	 * @return each ContextMenuItem instance in the list will appear at the
+	 * context menu's top level
 	 */
-	public abstract String[] getMenuItems(String[] paths);
+	public abstract List<ContextMenuItem> getMenuItem(String[] paths);
 
 }

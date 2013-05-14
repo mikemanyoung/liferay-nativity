@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2012 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -12,20 +12,27 @@
  * details.
  */
 
-package com.liferay.nativity.modules.contextmenu.listeners;
+#ifndef CONTEXTMENUACTION_H
+#define CONTEXTMENUACTION_H
 
-/**
- * @author Dennis Ju
- */
-public abstract class MenuItemListener {
+#include "stdafx.h"
 
-	/**
-	 * Called when a context menu item is selected
-	 *
-	 * @param text value of the selected menu item
-	 *
-	 * @param array of selected file paths
-	 */
-	public abstract void onMenuItemSelected(String menuText, String[] paths);
+class __declspec(dllexport) ContextMenuAction 
+{
+public:
 
-}
+	int GetId();
+	
+	std::vector<std::wstring>* GetFiles();
+	
+	void SetId(int);
+
+	void SetFiles(std::vector<std::wstring>*);
+
+private:
+	
+	int _id;
+	std::vector<std::wstring>* _files;
+};
+
+#endif

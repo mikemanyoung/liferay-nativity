@@ -22,32 +22,27 @@ import com.liferay.nativity.util.OSDetector;
 /**
  * @author Dennis Ju
  */
-public class ContextMenuControlFactory {
+public class ContextMenuControlUtil {
 
 	public static ContextMenuControl getContextMenuControl(
 		NativityControl nativityControl,
 		ContextMenuControlCallback contextMenuControlCallback) {
 
-		if (_contextMenuControl == null) {
-			ContextMenuControlFactory contextMenuControlFactory =
-				new ContextMenuControlFactory(
-					nativityControl, contextMenuControlCallback);
+		ContextMenuControlUtil contextMenuControlUtil =
+			new ContextMenuControlUtil(
+				nativityControl, contextMenuControlCallback);
 
-			if (OSDetector.isApple()) {
-				_contextMenuControl =
-					contextMenuControlFactory.createAppleContextMenuControl();
-			}
-			else if (OSDetector.isWindows()) {
-				_contextMenuControl =
-					contextMenuControlFactory.createWindowsContextMenuControl();
-			}
-			else if (OSDetector.isLinux()) {
-				_contextMenuControl =
-					contextMenuControlFactory.createLinuxContextMenuControl();
-			}
+		if (OSDetector.isApple()) {
+			return contextMenuControlUtil.createAppleContextMenuControl();
+		}
+		else if (OSDetector.isWindows()) {
+			return contextMenuControlUtil.createWindowsContextMenuControl();
+		}
+		else if (OSDetector.isLinux()) {
+			return contextMenuControlUtil.createLinuxContextMenuControl();
 		}
 
-		return _contextMenuControl;
+		return null;
 	}
 
 	protected ContextMenuControl createAppleContextMenuControl() {
@@ -65,15 +60,13 @@ public class ContextMenuControlFactory {
 			_nativityControl, _contextMenuControlCallback);
 	}
 
-	private ContextMenuControlFactory(
+	private ContextMenuControlUtil(
 		NativityControl nativityControl,
 		ContextMenuControlCallback contextMenuControlCallback) {
 
 		_nativityControl = nativityControl;
 		_contextMenuControlCallback = contextMenuControlCallback;
 	}
-
-	private static ContextMenuControl _contextMenuControl;
 
 	private ContextMenuControlCallback _contextMenuControlCallback;
 	private NativityControl _nativityControl;

@@ -65,9 +65,9 @@ public class WindowsNativityControlImpl extends NativityControl {
 	}
 
 	@Override
-	public void setRootFolder(String folder) {
+	public void setFilterFolder(String folder) {
 		NativityMessage message = new NativityMessage(
-			Constants.SET_ROOT_FOLDER, folder);
+			Constants.SET_FILTER_PATH, folder);
 
 		sendMessage(message);
 	}

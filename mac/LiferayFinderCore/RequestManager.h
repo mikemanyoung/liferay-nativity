@@ -13,29 +13,29 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "AsyncSocket.h"
+#import "GCDAsyncSocket.h"
 #import "RequestManager.h"
 
 @interface RequestManager : NSObject
 {
-	AsyncSocket* listenSocket;
-	AsyncSocket* connectedSocket;
+	GCDAsyncSocket* _listenSocket;
+	GCDAsyncSocket* _callbackListenSocket;
 
-	AsyncSocket* listenSocket2;
-	AsyncSocket* callbackSocket;
+	NSMutableArray* _connectedSockets;
+	NSMutableArray* _callbackSockets;
+	NSMutableDictionary* _callbackMsgs;
 
-	NSCondition* callbackCondition;
-	NSString* callbackMsg;
-	NSNumberFormatter* numberFormatter;
-	NSString* rootFolder;
-	NSData* warningData;
+	NSNumberFormatter* _numberFormatter;
+	NSString* _filterFolder;
 
-	BOOL isRunning;
+	BOOL _isRunning;
 }
+
+@property (nonatomic, retain) NSString* filterFolder;
 
 + (RequestManager*)sharedInstance;
 
-- (void)menuItemClicked:(NSNumber*)item withTitle:(NSString*)title;
+- (void)menuItemClicked:(NSDictionary*)actionDictionary;
 - (NSArray*)menuItemsForFiles:(NSArray*)files;
 - (void)start;
 

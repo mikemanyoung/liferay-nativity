@@ -22,32 +22,26 @@ import com.liferay.nativity.util.OSDetector;
 /**
  * @author Dennis Ju
  */
-public class FileIconControlFactory {
+public class FileIconControlUtil {
 
 	public static FileIconControl getFileIconControl(
 		NativityControl nativityControl,
 		FileIconControlCallback fileIconControlCallback) {
 
-		if (_fileIconControl == null) {
-			FileIconControlFactory fileIconControlFactory =
-				new FileIconControlFactory(
-					nativityControl, fileIconControlCallback);
+		FileIconControlUtil fileIconControlUtil = new FileIconControlUtil(
+			nativityControl, fileIconControlCallback);
 
-			if (OSDetector.isApple()) {
-				_fileIconControl =
-					fileIconControlFactory.createAppleFileIconControl();
-			}
-			else if (OSDetector.isWindows()) {
-				_fileIconControl =
-					fileIconControlFactory.createWindowsFileIconControl();
-			}
-			else if (OSDetector.isLinux()) {
-				_fileIconControl =
-					fileIconControlFactory.createLinuxFileIconControl();
-			}
+		if (OSDetector.isApple()) {
+			return fileIconControlUtil.createAppleFileIconControl();
+		}
+		else if (OSDetector.isWindows()) {
+			return fileIconControlUtil.createWindowsFileIconControl();
+		}
+		else if (OSDetector.isLinux()) {
+			return fileIconControlUtil.createLinuxFileIconControl();
 		}
 
-		return _fileIconControl;
+		return null;
 	}
 
 	protected FileIconControl createAppleFileIconControl() {
@@ -65,15 +59,13 @@ public class FileIconControlFactory {
 			_nativityControl, _fileIconControlCallback);
 	}
 
-	private FileIconControlFactory(
+	private FileIconControlUtil(
 		NativityControl nativityControl,
 		FileIconControlCallback fileIconControlCallback) {
 
 		_nativityControl = nativityControl;
 		_fileIconControlCallback = fileIconControlCallback;
 	}
-
-	private static FileIconControl _fileIconControl;
 
 	private FileIconControlCallback _fileIconControlCallback;
 	private NativityControl _nativityControl;

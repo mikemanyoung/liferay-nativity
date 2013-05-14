@@ -20,44 +20,15 @@
 
 static ContentManager* sharedInstance = nil;
 
-OSStatus SendFinderSyncEvent(const FSRef* inObjectRef)
-{
-	AppleEvent theEvent = { typeNull, NULL };
-	AppleEvent replyEvent = { typeNull, NULL };
-	AliasHandle itemAlias = NULL;
-
-	OSStatus err = FSNewAliasMinimal(inObjectRef, &itemAlias);
-
-	if (err == noErr)
-	{
-		ProcessSerialNumber psn = { 0, kCurrentProcess };
-		pid_t pid;
-		GetProcessPID(&psn, &pid);
-
-		err = AEBuildAppleEvent(kAEFinderSuite, kAESync, typeKernelProcessID, &pid, sizeof(pid), kAutoGenerateReturnID, kAnyTransactionID, &theEvent, NULL, "'----':alis(@@)", itemAlias);
-
-		if (err == noErr)
-		{
-			err = AESendMessage(&theEvent, &replyEvent, kAENoReply, kAEDefaultTimeout);
-
-			AEDisposeDesc(&replyEvent);
-			AEDisposeDesc(&theEvent);
-		}
-
-		DisposeHandle((Handle)itemAlias);
-	}
-
-	return err;
-}
-
 @implementation ContentManager
 - init
 {
-	if (self == [super init])
+	self = [super init];
+
+	if (self)
 	{
-		fileNamesCache_ = [[NSMutableDictionary alloc] init];
-		currentId_ = 0;
-		overlaysEnabled_ = FALSE;
+		_fileNamesCache = [[NSMutableDictionary alloc] init];
+		_overlaysEnabled = FALSE;
 	}
 
 	return self;
@@ -78,26 +49,26 @@ OSStatus SendFinderSyncEvent(const FSRef* inObjectRef)
 
 - (void)enableOverlays:(BOOL)enable
 {
-	overlaysEnabled_ = enable;
+	_overlaysEnabled = enable;
 
 	[self repaintAllWindows];
 }
 
 - (NSNumber*)iconByPath:(NSString*)path
 {
-	if (!overlaysEnabled_)
+	if (!_overlaysEnabled)
 	{
 		return nil;
 	}
 
-	NSNumber* result = [fileNamesCache_ objectForKey:path];
+	NSNumber* result = [_fileNamesCache objectForKey:path];
 
 	return result;
 }
 
 - (void)removeAllIcons
 {
-	[fileNamesCache_ removeAllObjects];
+	[_fileNamesCache removeAllObjects];
 
 	[self repaintAllWindows];
 }
@@ -106,7 +77,7 @@ OSStatus SendFinderSyncEvent(const FSRef* inObjectRef)
 {
 	for (NSString* path in paths)
 	{
-		[fileNamesCache_ removeObjectForKey:path];
+		[_fileNamesCache removeObjectForKey:path];
 	}
 
 	[self repaintAllWindows];
@@ -120,7 +91,8 @@ OSStatus SendFinderSyncEvent(const FSRef* inObjectRef)
 	{
 		NSWindow* window = [windows objectAtIndex:i];
 
-		if (![window isVisible]) {
+		if (![window isVisible])
+		{
 			continue;
 		}
 
@@ -137,18 +109,24 @@ OSStatus SendFinderSyncEvent(const FSRef* inObjectRef)
 	}
 }
 
-- (void)setIcons:(NSDictionary*)iconDictionary filterByFolder:(NSString*)rootFolder
+- (void)setIcons:(NSDictionary*)iconDictionary filterByFolder:(NSString*)filterFolder
 {
 	for (NSString* path in iconDictionary)
 	{
-        if (rootFolder && ![path hasPrefix:rootFolder])
-        {
-            continue;
-        }
+		if (filterFolder && ![path hasPrefix:filterFolder])
+		{
+			continue;
+		}
 
 		NSNumber* iconId = [iconDictionary objectForKey:path];
 
-		[fileNamesCache_ setObject:iconId forKey:path];
+		if ([iconId intValue] == -1)
+		{
+			[_fileNamesCache removeObjectForKey:path];
+		}
+		else {
+			[_fileNamesCache setObject:iconId forKey:path];
+		}
 	}
 
 	[self repaintAllWindows];

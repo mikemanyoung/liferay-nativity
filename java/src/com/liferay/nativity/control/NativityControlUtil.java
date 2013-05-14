@@ -14,7 +14,6 @@
 
 package com.liferay.nativity.control;
 
-import com.liferay.nativity.control.linux.LinuxNativityControlImpl;
 import com.liferay.nativity.control.mac.AppleNativityControlImpl;
 import com.liferay.nativity.control.win.WindowsNativityControlImpl;
 import com.liferay.nativity.util.OSDetector;
@@ -25,10 +24,10 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Dennis Ju
  */
-public class NativityControlFactory {
+public class NativityControlUtil {
 
 	/**
-	 * Factory method to get an instance of NativityControl
+	 * Gets an instance of NativityControl
 	 *
 	 * @return implementation of NativityControl instance based on the
 	 * user's operating system. Returns null for unsupported operating systems.
@@ -42,12 +41,11 @@ public class NativityControlFactory {
 				_nativityControl = new WindowsNativityControlImpl();
 			}
 			else if (OSDetector.isLinux()) {
-				_nativityControl = new LinuxNativityControlImpl();
+				_nativityControl = new AppleNativityControlImpl();
 			}
 			else {
 				_logger.error(
-					"NativityControl does not support {}",
-					System.getProperty("os.name"));
+					"{} is not supported", System.getProperty("os.name"));
 
 				_nativityControl = null;
 			}
@@ -57,7 +55,7 @@ public class NativityControlFactory {
 	}
 
 	private static Logger _logger = LoggerFactory.getLogger(
-		NativityControlFactory.class.getName());
+		NativityControlUtil.class.getName());
 
 	private static NativityControl _nativityControl;
 
