@@ -70,7 +70,8 @@ public interface FileIconControl extends FileIconControlCallback {
 	 *
 	 * @param file path to set file icon overlays
 	 *
-	 * @param id of file icon overlay
+	 * @param id of file icon overlay. Value of -1 will remove the overlay
+	 * (same as calling removeFileIcon).
 	 */
 	public void setFileIcon(String path, int iconId);
 
@@ -82,16 +83,6 @@ public interface FileIconControl extends FileIconControlCallback {
 	 * @param map containing paths and file icon overlay ids
 	 */
 	public void setFileIcons(Map<String, Integer> fileIconsMap);
-
-	/**
-	 * Optionally set the root folder filter path for requests made
-	 * to the native service. For example, setting a value of "/test/folder"
-	 * indicates that any requests for files that are not a child of
-	 * "/test/folder" will be ignored. This can improve native performance.
-	 *
-	 * @param root folder path to filter by (inclusive)
-	 */
-	public abstract void setFilterPath(String folder);
 
 	/**
 	 * Mac only
