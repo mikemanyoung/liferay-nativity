@@ -12,11 +12,10 @@
  * details.
  */
 
+#import "ContentManager.h"
 #import "FinderHook.h"
-#import "Finder/Finder.h"
 #import "IconCache.h"
-#include "ContentManager.h"
-#include "objc/objc-class.h"
+#import "objc/objc-class.h"
 #import "RequestManager.h"
 
 static BOOL installed = NO;

@@ -12,11 +12,11 @@
  * details.
  */
 
-#import "RequestManager.h"
 #import "ContentManager.h"
 #import "IconCache.h"
 #import "JSONKit.h"
-#include "MenuManager.h"
+#import "RequestManager.h"
+#import "MenuManager.h"
 
 static RequestManager* sharedInstance = nil;
 
@@ -287,7 +287,7 @@ static double maxMenuItemsRequestWaitMilliSec = 250;
 
 		if (([startDate timeIntervalSinceNow] * -1000) > maxMenuItemsRequestWaitMilliSec)
 		{
-			NSLog(@"LiferayFinderCore: menu item request timed out");
+			NSLog(@"LiferayNativityFinder: menu item request timed out");
 
 			break;
 		}

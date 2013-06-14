@@ -13,7 +13,7 @@
  */
 
 #import "MenuManager.h"
-#import "Finder/finder.h"
+#import "Finder/Finder.h"
 #import "RequestManager.h"
 
 @implementation MenuManager
@@ -170,7 +170,12 @@ static MenuManager* sharedInstance = nil;
 	{
 		FINode* node = (FINode*)[NSClassFromString(@"FINode") nodeFromNodeRef:current->fNodeRef];
 
-		[selectedItems addObject:[[node previewItemURL] path]];
+		NSString* path = [[node previewItemURL] path];
+
+		if (path)
+		{
+			[selectedItems addObject:path];
+		}
 	}
 
 	return [selectedItems autorelease];
