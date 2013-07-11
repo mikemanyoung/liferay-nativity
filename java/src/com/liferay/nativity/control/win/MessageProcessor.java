@@ -145,7 +145,6 @@ public class MessageProcessor implements Runnable {
 
 	private static Logger _logger = LoggerFactory.getLogger(
 		MessageProcessor.class.getName());
-
 	private static ObjectMapper _objectMapper =
 		new ObjectMapper().configure(
 			JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);

@@ -93,9 +93,7 @@ public abstract class WindowsSocketBase implements Runnable {
 		WindowsSocketBase.class.getName());
 
 	private int _port;
-
 	private boolean _running = false;
-
 	private ServerSocket _serverSocket;
 
 }
