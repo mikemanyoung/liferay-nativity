@@ -207,14 +207,11 @@ public abstract class UnixNativityControlBaseImpl extends NativityControl {
 	private static final String _RETURN_NEW_LINE = "\r\n";
 
 	private static int _callbackSocketPort = 33002;
-
 	private static Logger _logger = LoggerFactory.getLogger(
-		AppleNativityControlImpl.class.getName());
-
+		UnixNativityControlBaseImpl.class.getName());
 	private static ObjectMapper _objectMapper =
 		new ObjectMapper().configure(
 			JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
-
 	private static int _serviceSocketPort = 33001;
 
 	private BufferedReader _callbackBufferedReader;

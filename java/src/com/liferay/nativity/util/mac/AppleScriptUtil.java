@@ -88,7 +88,6 @@ public class AppleScriptUtil {
 	private static ScriptEngine _appleScriptEngine;
 	private static Map<String, String> _loadedScripts =
 		new HashMap<String, String>();
-
 	private static ScriptEngineManager _scriptEngineManager;
 
 }

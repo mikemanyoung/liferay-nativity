@@ -49,7 +49,6 @@ public class AppPropsUtil {
 
 	private static Logger _logger = LoggerFactory.getLogger(
 		AppPropsUtil.class.getName());
-
 	private static Properties _properties = new Properties();
 
 }

@@ -98,10 +98,8 @@ public class WindowsSendSocket extends WindowsSocketBase {
 
 	private static ConcurrentLinkedQueue<String> _commands =
 		new ConcurrentLinkedQueue<String>();
-
 	private static Logger _logger = LoggerFactory.getLogger(
 		WindowsSendSocket.class.getName());
-
 	private static ObjectMapper _objectMapper =
 		new ObjectMapper().configure(
 			JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
