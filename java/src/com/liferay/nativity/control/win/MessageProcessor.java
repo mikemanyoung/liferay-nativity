@@ -90,6 +90,10 @@ public class MessageProcessor implements Runnable {
 			return;
 		}
 
+		if (receivedMessage.endsWith(":\\\"]}")) {
+			receivedMessage = receivedMessage.replace(":\\\"]}", "\"]}");
+		}
+
 		try {
 			NativityMessage message = _objectMapper.readValue(
 				receivedMessage, NativityMessage.class);
