@@ -324,7 +324,7 @@ bool ContextMenuUtil::_ParseContextMenuList(wstring* contextMenuList, vector<Con
 	{
 		wstring* contextMenu = new wstring();
 
-		currentLocation = ParserUtil::GetNextItemInList(contextMenuList, currentLocation, contextMenu);
+		currentLocation = ParserUtil::GetNextStringItemInList(contextMenuList, currentLocation, contextMenu);
 
 		currentLocation++;
 

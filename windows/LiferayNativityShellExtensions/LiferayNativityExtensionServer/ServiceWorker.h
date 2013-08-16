@@ -31,7 +31,6 @@ public:
 	bool ProcessMessages(std::vector<NativityMessage*>*);
 	
 private:
-	bool _ClearFileIcon(std::wstring*);
 	bool _SetSystemFolder(std::wstring*);
 	bool _RefreshFiles(std::wstring*);
 	bool _RefreshFile(const wchar_t*);
