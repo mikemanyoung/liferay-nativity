@@ -197,6 +197,7 @@ public class WindowsNativityUtil {
 
 	private static boolean _loadLibrary(boolean fullPath, String path) {
 		_logger.trace("Trying to load {} {}", fullPath, path);
+
 		try {
 			if (fullPath) {
 				System.load(path);
