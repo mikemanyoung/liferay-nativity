@@ -12,6 +12,7 @@
  * details.
  */
 
+#import <objc/runtime.h>
 #import "ContentManager.h"
 #import "IconCache.h"
 #import "IconOverlayHandlers.h"
@@ -33,7 +34,7 @@
 
 		if (image != nil)
 		{
-			struct CGRect arg2 = [(TIconViewCell*)self imageRectForBounds : arg1];
+			struct CGRect arg2 = [(TIconViewCell*)self imageRectForBounds:arg1];
 
 			[image drawInRect:NSMakeRect(arg2.origin.x, arg2.origin.y, arg2.size.width, arg2.size.height) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0 respectFlipped:TRUE hints:nil];
 		}
@@ -81,6 +82,44 @@
 	else
 	{
 		[self IconOverlayHandlers_drawImage:arg1];
+	}
+}
+
+- (void)IconOverlayHandlers_drawRect:(struct CGRect)arg1
+{
+	[self IconOverlayHandlers_drawRect:arg1];
+
+	NSView* supersuperview = [[(NSView*)self superview] superview];
+
+	if ([supersuperview isKindOfClass:(id)objc_getClass("TListRowView")])
+	{
+		TListRowView *listRowView = (TListRowView*) supersuperview;
+		FINode *fiNode;
+
+		object_getInstanceVariable(listRowView, "_node", (void**)&fiNode);
+
+		NSURL *url;
+
+		if ([fiNode respondsToSelector:@selector(previewItemURL)])
+		{
+			url = [fiNode previewItemURL];
+		}
+		else {
+			return;
+		}
+
+		NSNumber* imageIndex = [[ContentManager sharedInstance] iconByPath:[url path]];
+
+		if ([imageIndex intValue] > 0)
+		{
+			NSImage* image = [[IconCache sharedInstance] getIcon:imageIndex];
+
+			if (image != nil)
+			{
+				[image drawInRect:NSMakeRect(arg1.origin.x, arg1.origin.y, arg1.size.width, arg1.size.height) fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0 respectFlipped:TRUE hints:nil];
+			}
+		}
+
 	}
 }
 
