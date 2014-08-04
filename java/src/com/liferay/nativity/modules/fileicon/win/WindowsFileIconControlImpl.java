@@ -15,14 +15,11 @@
 package com.liferay.nativity.modules.fileicon.win;
 
 import com.liferay.nativity.Constants;
-import com.liferay.nativity.control.MessageListener;
 import com.liferay.nativity.control.NativityControl;
-import com.liferay.nativity.control.NativityMessage;
 import com.liferay.nativity.modules.fileicon.FileIconControlBase;
 import com.liferay.nativity.modules.fileicon.FileIconControlCallback;
 import com.liferay.nativity.util.win.RegistryUtil;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,32 +32,6 @@ public class WindowsFileIconControlImpl extends FileIconControlBase {
 		FileIconControlCallback fileIconControlCallback) {
 
 		super(nativityControl, fileIconControlCallback);
-
-		MessageListener messageListener = new MessageListener(
-			Constants.GET_FILE_ICON_ID) {
-
-			@Override
-			public NativityMessage onMessage(NativityMessage message) {
-				String filePath = null;
-
-				if (message.getValue() instanceof List<?>) {
-					List<?> args = (List<?>)message.getValue();
-
-					if (args.size() > 0) {
-						filePath = args.get(0).toString();
-					}
-				}
-				else {
-					filePath = message.getValue().toString();
-				}
-
-				int icon = getIconForFile(filePath);
-
-				return new NativityMessage(Constants.GET_FILE_ICON_ID, icon);
-			}
-		};
-
-		nativityControl.registerMessageListener(messageListener);
 	}
 
 	@Override
@@ -75,6 +46,10 @@ public class WindowsFileIconControlImpl extends FileIconControlBase {
 		RegistryUtil.writeRegistry(
 			Constants.NATIVITY_REGISTRY_KEY,
 			Constants.ENABLE_OVERLAY_REGISTRY_NAME, 1);
+	}
+
+	@Override
+	public void refreshIcons() {
 	}
 
 	@Override
