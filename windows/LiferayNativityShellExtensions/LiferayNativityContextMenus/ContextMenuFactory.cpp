@@ -13,11 +13,8 @@
  */
 
 #include "ContextMenuFactory.h"
-#include "LiferayNativityContextMenus.h"
-#include <new>
 
 extern long dllReferenceCount;
-
 
 ContextMenuFactory::ContextMenuFactory(wchar_t *modulePath) : _modulePath(modulePath), _referenceCount(1)
 {

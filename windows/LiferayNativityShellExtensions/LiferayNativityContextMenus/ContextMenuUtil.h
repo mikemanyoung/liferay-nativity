@@ -17,11 +17,18 @@
 
 #pragma once
 
-#include "ContextMenuItem.h"
 #include "ContextMenuAction.h"
+#include "ContextMenuItem.h"
+#include "ContextMenuConstants.h"
+#include "FileUtil.h"
 #include "NativityMessage.h"
-
+#include "ParserUtil.h"
+#include "RegistryUtil.h"
+#include "UtilConstants.h"
+#include "json/json.h"
 #include "stdafx.h"
+
+#include <vector>
 
 class __declspec(dllexport) ContextMenuUtil
 {
@@ -49,9 +56,9 @@ public:
 private:
 	bool _GetContextMenuItem(int, std::vector<ContextMenuItem*>*, ContextMenuItem**);
 
-	bool _ParseContextMenu(std::wstring*, ContextMenuItem*);
-
 	bool _ParseContextMenuList(std::wstring*, std::vector<ContextMenuItem*>*);
+
+	bool _ParseContextMenuItem(const Json::Value &, ContextMenuItem*);
 
 	bool _ProcessContextMenus(NativityMessage*);
 
@@ -60,7 +67,6 @@ private:
 	std::vector<ContextMenuItem*>* _menuList;
 
 	std::vector<std::wstring>* _selectedFiles;
-
 };
 
 #endif

@@ -15,6 +15,11 @@
 #ifndef NATIVITYMESSAGE_H
 #define NATIVITYMESSAGE_H
 
+#include "ParserUtil.h"
+#include "UtilConstants.h"
+
+#include <fstream>
+#include <iostream>
 #include <string>
 
 #pragma once
@@ -25,8 +30,6 @@ public:
     NativityMessage(void);
 	~NativityMessage(void);
 
-	bool InitFromMessage(const std::wstring*);
-
 	std::wstring* GetCommand();
 	std::wstring* GetValue();
 
@@ -34,7 +37,6 @@ public:
 	void SetValue(std::wstring*);
 
 private:
-
     std::wstring* _command;
 	std::wstring* _value;
 };

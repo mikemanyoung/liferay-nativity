@@ -14,14 +14,6 @@
 
 #include "LiferayNativityContextMenus.h"
 
-#include "ContextMenuContants.h"
-#include "ContextMenuAction.h"
-
-#include <Shellapi.h>
-#include <Shlwapi.h>
-#include <stdlib.h>
-#include <Strsafe.h>
-
 using namespace std;
 
 #pragma comment(lib, "shlwapi.lib")
