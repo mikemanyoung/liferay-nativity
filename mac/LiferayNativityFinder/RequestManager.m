@@ -84,7 +84,7 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 
 		_automaticCleanupPrograms = [[NSHashTable alloc] initWithOptions:NSHashTableObjectPointerPersonality capacity:0];
 
-		_filterFolder = nil;
+		_filterFolders = nil;
 
 		_numberFormatter = [[NSNumberFormatter alloc] init];
 		[_numberFormatter setNumberStyle:NSNumberFormatterDecimalStyle];
@@ -139,7 +139,7 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 
 	[_numberFormatter release];
 
-	[_filterFolder release];
+	[_filterFolders release];
 	[_allIconsConnection release];
 
 	sharedInstance = nil;
@@ -228,7 +228,13 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 	}
 	else if ([command isEqualToString:@"setFilterPath"])
 	{
+		// Deprecated as of 1.2. Check for backward compatibility with 1.1.
+
 		[self execSetFilterPathCmd:value replyTo:sock];
+	}
+	else if ([command isEqualToString:@"setFilterPaths"])
+	{
+		[self execSetFilterPathsCmd:value replyTo:sock];
 	}
 	else if ([command isEqualToString:@"repaintAllIcons"])
 	{
@@ -356,7 +362,7 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 	NSDictionary* iconDictionary = (NSDictionary*)cmdData;
 
 	dispatch_async(dispatch_get_main_queue(), ^{
-		[[ContentManager sharedInstance] setIconsFor:sock.userData iconIdsByPath:iconDictionary filterByFolder:_filterFolder];
+		[[ContentManager sharedInstance] setIconsFor:sock.userData iconIdsByPath:iconDictionary filterByFolders:_filterFolders];
 	});
 
 	[self replyString:@"1" toSocket:sock];
@@ -364,7 +370,19 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 
 - (void)execSetFilterPathCmd:(NSData*)cmdData replyTo:(GCDAsyncSocket*)sock
 {
-	[self setFilterFolder:(NSString*)cmdData];
+	NSString* path = (NSString*)cmdData;
+	NSArray* paths = [NSArray arrayWithObject:path];
+
+	[self setFilterFolders:paths];
+
+	[self replyString:@"1" toSocket:sock];
+}
+
+- (void)execSetFilterPathsCmd:(NSData*)cmdData replyTo:(GCDAsyncSocket*)sock
+{
+	NSArray* paths = (NSArray*)cmdData;
+
+	[self setFilterFolders:paths];
 
 	[self replyString:@"1" toSocket:sock];
 }
@@ -426,11 +444,11 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 		return nil;
 	}
 
-	if (_filterFolder)
+	if (_filterFolders)
 	{
 		NSString* file = [files objectAtIndex:0];
 
-		if (![file hasPrefix:_filterFolder])
+		if (![[ContentManager sharedInstance] isFileFiltered:file filterByFolders:_filterFolders])
 		{
 			return nil;
 		}
@@ -536,9 +554,9 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 		return [iconIds autorelease];
 	}
 
-	if (_filterFolder)
+	if (_filterFolders)
 	{
-		if (![file hasPrefix:_filterFolder])
+		if (![[ContentManager sharedInstance] isFileFiltered:file filterByFolders:_filterFolders])
 		{
 			return [iconIds autorelease];
 		}
