@@ -90,6 +90,7 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 		[_numberFormatter setNumberStyle:NSNumberFormatterDecimalStyle];
 
 		_isRunning = NO;
+		_debugMode = NO;
 
 		_allIconsConnection = [[NSObject alloc] init];
 
@@ -239,6 +240,14 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 	else if ([command isEqualToString:@"repaintAllIcons"])
 	{
 		[self execRepaintAllIcons:value replyTo:sock];
+	}
+	else if ([command isEqualToString:@"enableDebugMode"])
+	{
+		[self execEnableDebugMode:value replyTo:sock];
+	}
+	else if ([command isEqualToString:@"disableDebugMode"])
+	{
+		[self execDisableDebugMode:value replyTo:sock];
 	}
 	else
 	{
@@ -423,6 +432,20 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 	[self replyString:@"1" toSocket:sock];
 }
 
+- (void)execEnableDebugMode:(NSData*)cmdData replyTo:(GCDAsyncSocket*)sock
+{
+	_debugMode = YES;
+
+	[self replyString:@"1" toSocket:sock];
+}
+
+- (void)execDisableDebugMode:(NSData*)cmdData replyTo:(GCDAsyncSocket*)sock
+{
+	_debugMode = NO;
+
+	[self replyString:@"1" toSocket:sock];
+}
+
 - (void)menuItemClicked:(NSDictionary*)actionDictionary
 {
 	if ([_connectedCallbackSockets count] == 0)
@@ -460,6 +483,10 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 		return nil;
 	}
 
+	if (nil == files) {
+		return nil;
+	}
+	
 	if (_filterFolders)
 	{
 		NSString* file = [files objectAtIndex:0];
@@ -554,6 +581,11 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 {
 	NSMutableArray* iconIds = [[NSMutableArray alloc] init];
 
+	// sometimes the file is null
+	if (nil == file) {
+		return iconIds;
+	}
+
 	NSNumber* imageIndex = [[ContentManager sharedInstance] iconByPath:file];
 
 	if ([imageIndex intValue] > 0)
@@ -565,7 +597,7 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 	// Thread-safety! _connectedListenSocketsWithIconCallbacks is manipulated on the socket's thread,
 	// but this method is called on the main thread
 	OSMemoryBarrier();
-	if (_connectedListenSocketsWithIconCallbacksCount == 0)
+	if (_connectedCallbackSocketsCount == 0)
 	{
 		return [iconIds autorelease];
 	}
@@ -596,7 +628,7 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 
 	@try {
 		[_callbackMsgs removeAllObjects];
-		_expectedCallbackResults = _connectedListenSocketsWithIconCallbacksCount;
+		_expectedCallbackResults = _connectedCallbackSocketsCount;
 
 		NSData* data = [[jsonString stringByAppendingString:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding];
 
@@ -625,7 +657,7 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 
 	if (![_callbackLock lockWhenCondition:GOT_CALLBACK_RESPONSE beforeDate:[NSDate dateWithTimeIntervalSinceNow:MAX_CALLBACK_REQUEST_WAIT_TIMEINTERVAL]])
 	{
-		NSLog(@"LiferayNativityFinder: file icon request timed out: %@", file);
+		NSLog(@"LiferayNativityFinder: file icon request timed out: %@ : %d", file, _expectedCallbackResults);
 
 		[_disableIconOverlaysUntil release];
 		_disableIconOverlaysUntil = [[[NSDate date] dateByAddingTimeInterval:DISABLE_ICON_OVERLAYS_ON_TIMEOUT_TIMEINTERVAL] retain];
@@ -639,6 +671,10 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 		for (NSValue* key in _callbackMsgs)
 		{
 			NSString* callbackMsg = [_callbackMsgs objectForKey:key];
+
+			if (_debugMode) {
+				NSLog(@"Processing icon callback for %@: %@", file, callbackMsg);
+			}
 
 			@try {
 				NSDictionary* responseDictionary = [callbackMsg objectFromJSONString];
@@ -674,7 +710,6 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 		// when the socket is broken, without interfering with other programs that use liferay-
 		// nativity
 		[newSocket setUserData:_allIconsConnection];
-
 		[_connectedListenSockets addObject:newSocket];
 	}
 	if (socket == _callbackSocket)
@@ -693,42 +728,57 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 
 - (void)socket:(GCDAsyncSocket*)socket didReadData:(NSData*)data withTag:(long)tag
 {
-	if ([_connectedListenSockets containsObject:socket])
-	{
-		[self execCommand:[data subdataWithRange:NSMakeRange(0, [data length] - 2)] replyTo:socket];
-
-		[socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:0];
+	if (_debugMode) {
+		NSLog(@"- (void)socket:(GCDAsyncSocket*)socket didReadData:(NSData*)data withTag:(long)tag");
 	}
 
-	if ([_connectedCallbackSockets containsObject:socket])
-	{
-		NSData* strData = [data subdataWithRange:NSMakeRange(0, [data length] - 2)];
-		NSString* callbackString = [[NSString alloc] initWithData:strData encoding:NSUTF8StringEncoding];
+	dispatch_async(_listenQueue, ^{
+		if ([_connectedListenSockets containsObject:socket])
+		{
+			[self execCommand:[data subdataWithRange:NSMakeRange(0, [data length] - 2)] replyTo:socket];
 
-		[_callbackLock lock];
-		@try {
-			OSMemoryBarrier();
-
-			[_callbackMsgs setValue:callbackString forKey:(NSString*)[NSValue valueWithPointer:socket]];
-
-			OSMemoryBarrier();
+			[socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:0];
 		}
-		@finally {
-			if ([_callbackMsgs count] >= _expectedCallbackResults)
-			{
-				[_callbackLock unlockWithCondition:GOT_CALLBACK_RESPONSE];
+    });
+
+    dispatch_async(_callbackQueue, ^{
+		if ([_connectedCallbackSockets containsObject:socket])
+		{
+			if (_debugMode) {
+				NSLog(@"... is on the callback queue");
 			}
-			else
-			{
-				[_callbackLock unlockWithCondition:WAITING_FOR_CALLBACK_RESPONSE];
+
+			NSData *strData = [data subdataWithRange:NSMakeRange(0, [data length] - 2)];
+			NSString *callbackString = [[NSString alloc] initWithData:strData encoding:NSUTF8StringEncoding];
+
+			[_callbackLock lock];
+			@try {
+				OSMemoryBarrier();
+
+				if (_debugMode) {
+					NSLog(@"Callback from %@: %@", (NSString *) [NSValue valueWithPointer:socket], callbackString);
+				}
+
+				[_callbackMsgs setValue:callbackString forKey:(NSString *) [NSValue valueWithPointer:socket]];
+
+				OSMemoryBarrier();
 			}
+			@finally {
+				if ([_callbackMsgs count] >= _expectedCallbackResults){
+					[_callbackLock unlockWithCondition:GOT_CALLBACK_RESPONSE];
+				}
+				else {
+					[_callbackLock unlockWithCondition:WAITING_FOR_CALLBACK_RESPONSE];
+				}
+			}
+
+
+			[callbackString release];
+
+			[socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:0];
 		}
+	});
 
-
-		[callbackString release];
-
-		[socket readDataToData:[GCDAsyncSocket CRLFData] withTimeout:-1 tag:0];
-	}
 }
 
 - (NSTimeInterval)socket:(GCDAsyncSocket*)socket shouldTimeoutReadWithTag:(long)tag elapsed:(NSTimeInterval)elapsed bytesDone:(NSUInteger)length
@@ -795,11 +845,13 @@ static NSInteger GOT_CALLBACK_RESPONSE = 2;
 
 		if (![_listenSocket acceptOnInterface:@"localhost" port:33001 error:&error])
 		{
+			NSLog(@"Can not open listenSocket on port 33001");
 			return;
 		}
 
 		if (![_callbackSocket acceptOnInterface:@"localhost" port:33002 error:&error])
 		{
+			NSLog(@"Can not open callbackSocket on port 33002");
 			return;
 		}
 
