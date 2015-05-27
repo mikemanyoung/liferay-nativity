@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -27,9 +27,9 @@ public class ContextMenuItem {
 
 	public ContextMenuItem(String title) {
 		_title = title;
+		_contextMenuItems = new ArrayList<ContextMenuItem>();
 		_enabled = true;
 		_uuid = UUID.randomUUID().toString();
-		_contextMenuItems = new ArrayList<ContextMenuItem>();
 	}
 
 	public ContextMenuItem(
@@ -86,6 +86,10 @@ public class ContextMenuItem {
 		return _helpText;
 	}
 
+	public String getIconId() {
+		return _iconId;
+	}
+
 	public String getTitle() {
 		return _title;
 	}
@@ -108,6 +112,10 @@ public class ContextMenuItem {
 
 	public void setHelpText(String helpText) {
 		_helpText = helpText;
+	}
+
+	public void setIconId(String iconId) {
+		_iconId = iconId;
 	}
 
 	public void setTitle(String title) {
@@ -140,8 +148,9 @@ public class ContextMenuItem {
 	private ContextMenuAction _contextMenuAction;
 	private List<ContextMenuItem> _contextMenuItems;
 	private boolean _enabled;
-	private String _helpText;
-	private String _title;
-	private String _uuid;
+	private String _helpText = "";
+	private String _iconId = "";
+	private String _title = "";
+	private String _uuid = "";
 
 }

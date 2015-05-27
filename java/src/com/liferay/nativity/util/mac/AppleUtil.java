@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -106,6 +106,18 @@ public class AppleUtil {
 		try {
 			String script = AppleScriptUtil.getScript(
 				"reloadscripts.applescript");
+
+			AppleScriptUtil.executeScript(script);
+		}
+		catch (Exception e) {
+			_logger.error(e.getMessage(), e);
+		}
+	}
+
+	public static void uninstallScripts() {
+		try {
+			String script = AppleScriptUtil.getScript(
+				"uninstallscripts.applescript");
 
 			AppleScriptUtil.executeScript(script);
 		}

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -28,8 +28,8 @@ import java.util.List;
 public abstract class FileIconControlBase implements FileIconControl {
 
 	public FileIconControlBase(
-			NativityControl nativityControl,
-			FileIconControlCallback fileIconControlCallback) {
+		NativityControl nativityControl,
+		FileIconControlCallback fileIconControlCallback) {
 
 		this.nativityControl = nativityControl;
 		this.fileIconControlCallback = fileIconControlCallback;
@@ -48,7 +48,7 @@ public abstract class FileIconControlBase implements FileIconControl {
 						filePath = args.get(0).toString();
 					}
 				}
-				else if (null != message.getValue()) {
+				else if (message.getValue() != null) {
 					filePath = message.getValue().toString();
 				}
 

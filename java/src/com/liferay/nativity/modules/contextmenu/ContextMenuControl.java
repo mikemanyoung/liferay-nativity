@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -67,6 +67,16 @@ public abstract class ContextMenuControl implements ContextMenuControlCallback {
 
 		return newContextMenuItems;
 	}
+
+	/**
+	 * Mac Finder Sync and Mac Injector only
+	 *
+	 * Register a context menu icon
+	 *
+	 * @param path The path of the context menu icon to register
+	 * @param iconId The unique icon id used for this image
+	 */
+	public abstract void registerIcon(String path, String iconId);
 
 	protected ContextMenuControlCallback contextMenuControlCallback;
 	protected List<ContextMenuItem> contextMenuItems;

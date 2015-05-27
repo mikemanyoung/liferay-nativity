@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -129,9 +129,8 @@ public class MessageProcessor implements Runnable {
 	private static Logger _logger = LoggerFactory.getLogger(
 		MessageProcessor.class.getName());
 
-	private static ObjectMapper _objectMapper =
-		new ObjectMapper().configure(
-			JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+	private static ObjectMapper _objectMapper = new ObjectMapper().configure(
+		JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
 
 	private Socket _clientSocket;
 	private InputStreamReader _inputStreamReader;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -15,6 +15,7 @@
 package com.liferay.nativity.modules.contextmenu;
 
 import com.liferay.nativity.control.NativityControl;
+import com.liferay.nativity.modules.contextmenu.fs.FSContextMenuControlImpl;
 import com.liferay.nativity.modules.contextmenu.unix.AppleContextMenuControlImpl;
 import com.liferay.nativity.modules.contextmenu.unix.LinuxContextMenuControlImpl;
 import com.liferay.nativity.modules.contextmenu.win.WindowsContextMenuControlImpl;
@@ -34,7 +35,14 @@ public class ContextMenuControlUtil {
 				nativityControl, contextMenuControlCallback);
 
 		if (OSDetector.isApple()) {
-			return contextMenuControlUtil.createAppleContextMenuControl();
+			if (OSDetector.isMinimumAppleVersion(
+					OSDetector.MAC_YOSEMITE_10_10)) {
+
+				return contextMenuControlUtil.createFSContextMenuControl();
+			}
+			else {
+				return contextMenuControlUtil.createAppleContextMenuControl();
+			}
 		}
 		else if (OSDetector.isWindows()) {
 			return contextMenuControlUtil.createWindowsContextMenuControl();
@@ -48,6 +56,11 @@ public class ContextMenuControlUtil {
 
 	protected ContextMenuControl createAppleContextMenuControl() {
 		return new AppleContextMenuControlImpl(
+			_nativityControl, _contextMenuControlCallback);
+	}
+
+	protected ContextMenuControl createFSContextMenuControl() {
+		return new FSContextMenuControlImpl(
 			_nativityControl, _contextMenuControlCallback);
 	}
 

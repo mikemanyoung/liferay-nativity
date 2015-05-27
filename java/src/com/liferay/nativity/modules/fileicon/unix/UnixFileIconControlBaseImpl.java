@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -19,6 +19,9 @@ import com.liferay.nativity.control.NativityControl;
 import com.liferay.nativity.control.NativityMessage;
 import com.liferay.nativity.modules.fileicon.FileIconControlBase;
 import com.liferay.nativity.modules.fileicon.FileIconControlCallback;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Dennis Ju
@@ -44,6 +47,19 @@ public abstract class UnixFileIconControlBaseImpl extends FileIconControlBase {
 		}
 
 		return Integer.parseInt(reply);
+	}
+
+	@Override
+	public void registerIconWithId(String path, String label, String iconId) {
+		Map<String, String> map = new HashMap<String, String>(3);
+
+		map.put(Constants.PATH, path);
+		map.put(Constants.ICON_ID, iconId);
+
+		NativityMessage message = new NativityMessage(
+			Constants.REGISTER_ICON_WITH_ID, map);
+
+		nativityControl.sendMessage(message);
 	}
 
 	@Override

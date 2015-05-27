@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -14,9 +14,6 @@
 
 package com.liferay.nativity.modules.contextmenu.win;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.liferay.nativity.Constants;
 import com.liferay.nativity.control.MessageListener;
 import com.liferay.nativity.control.NativityControl;
@@ -27,9 +24,6 @@ import com.liferay.nativity.modules.contextmenu.model.ContextMenuItem;
 
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Dennis Ju
@@ -74,8 +68,7 @@ public class WindowsContextMenuControlImpl extends ContextMenuControl {
 				@SuppressWarnings("unchecked")
 				List<String> files = (List<String>)map.get(Constants.FILES);
 
-				String[] filesArray = (String[])files.toArray(
-					new String[files.size()]);
+				String[] filesArray = files.toArray(new String[files.size()]);
 
 				fireContextMenuAction(uuid, filesArray);
 
@@ -87,11 +80,8 @@ public class WindowsContextMenuControlImpl extends ContextMenuControl {
 			fireContextMenuActionMessageListener);
 	}
 
-	private static Logger _logger = LoggerFactory.getLogger(
-		WindowsContextMenuControlImpl.class.getName());
-
-	private static ObjectMapper _objectMapper =
-		new ObjectMapper().configure(
-			JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+	@Override
+	public void registerIcon(String path, String iconId) {
+	}
 
 }

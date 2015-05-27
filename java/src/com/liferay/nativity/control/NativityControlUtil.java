@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-2013 Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -14,6 +14,7 @@
 
 package com.liferay.nativity.control;
 
+import com.liferay.nativity.control.findersync.FSNativityControlImpl;
 import com.liferay.nativity.control.unix.AppleNativityControlImpl;
 import com.liferay.nativity.control.unix.LinuxNativityControlImpl;
 import com.liferay.nativity.control.win.WindowsNativityControlImpl;
@@ -36,7 +37,14 @@ public class NativityControlUtil {
 	public static NativityControl getNativityControl() {
 		if (_nativityControl == null) {
 			if (OSDetector.isApple()) {
-				_nativityControl = new AppleNativityControlImpl();
+				if (OSDetector.isMinimumAppleVersion(
+						OSDetector.MAC_YOSEMITE_10_10)) {
+
+					return new FSNativityControlImpl();
+				}
+				else {
+					_nativityControl = new AppleNativityControlImpl();
+				}
 			}
 			else if (OSDetector.isWindows()) {
 				_nativityControl = new WindowsNativityControlImpl();
