@@ -12,7 +12,6 @@
  * details.
  */
 
-#include <assert.h>
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -204,6 +203,9 @@ static RequestManager* sharedInstance = nil;
 	else if ([command isEqualToString:@"menuItems"]) {
 		[self processMenuItems:value];
 	}
+	else if ([command isEqualToString:@"refreshIcons"]) {
+		[self refreshBadges];
+	}
 	else if ([command isEqualToString:@"registerContextMenuIcon"]) {
 		[self registerContextMenuIcon:value];
 	}
@@ -278,7 +280,7 @@ static RequestManager* sharedInstance = nil;
 	[_callbackLock unlockWithCondition:RECEIVED_CALLBACK_RESPONSE];
 }
 
-- (void) refreshFiles {
+- (void) refreshBadges {
 	NSFileManager* fileManager = [NSFileManager defaultManager];
 
 	for (NSURL* observedFolder in [_observedFolders copy]) {
@@ -508,7 +510,7 @@ static RequestManager* sharedInstance = nil;
 
 	[FIFinderSyncController defaultController].directoryURLs = urls;
 
-	[self refreshFiles];
+	[self refreshBadges];
 }
 
 - (void) socket:(GCDAsyncSocket*)socket didConnectToHost:(NSString*)host port:(UInt16)port {
