@@ -86,11 +86,11 @@ Finder Sync plugins also do not support sub-menus. The context menus returned by
 
 ### Injector
 
-For OS X 10.9 Mavericks and below, there is no official API for custom file overlays and context menus in Finder, so LiferayNativity uses a technique called "[method swizzling](http://cocoadev.com/wiki/MethodSwizzling)" to swap Finder's code with our own custom code. The Finder Sync plugin only works on OS X 10.10 Yosemite and above.
+For OS X 10.9 Mavericks and below, there is no official API for custom file overlays and context menus in Finder, so Liferay Nativity uses a technique called "[method swizzling](http://cocoadev.com/MethodSwizzling)" to swap Finder's code with our own custom code. The Finder Sync plugin only works on OS X 10.10 Yosemite and above.
 
 The LiferayNativityFinder bundle is responsible for "method swizzling" the code for icon overlays and context menus as well as handling client requests. LiferayNativityInjector is a scripting addition responsible for injecting the LiferayNativityFinder bundle into the running instance of Finder.
 
-**Note:** Since method swizzling into Finder is not supported by Apple, any upgrade to Finder can break LiferayNativity's injected code. LiferayNativityInjector has an optional version check that can throw a warning if a newer, untested version of Finder is detected. Also, buggy injected code can cause Finder to crash or hang, so proceed with caution!
+**Note:** Since method swizzling into Finder is not supported by Apple, any upgrade to Finder can break Liferay Nativity's injected code. LiferayNativityInjector has an optional version check that can throw a warning if a newer, untested version of Finder is detected. Also, buggy injected code can cause Finder to crash or hang, so proceed with caution!
 
 #### Build
 
@@ -287,29 +287,29 @@ Liferay Nativity currently only supports Nautilus file manager. Hooks for Nemo a
 
 ### Build
 
-  git clone https://github.com/liferay/liferay-nativity
+    git clone https://github.com/liferay/liferay-nativity
 
-  cd liferay-nativity/linux/nautilus/src
+    cd liferay-nativity/linux/nautilus/src
 
-  sudo apt-get install cmake build-essential libgtk2.0-dev libnautilus-extension-dev libboost-all-dev
+    sudo apt-get install cmake build-essential libgtk2.0-dev libnautilus-extension-dev libboost-all-dev
 
-  cmake .
+    cmake .
 
-  make
+    make
 
 #### Deployment
 
 ##### Nautilus
 
-  sudo ln -s `pwd`/libliferaynativity.so /usr/lib/nautilus/extensions-3.0/libliferaynativity.so
-  killall -9 nautilus
+    sudo ln -s `pwd`/libliferaynativity.so /usr/lib/nautilus/extensions-3.0/libliferaynativity.so
+    killall -9 nautilus
 
 ##### Nemo (Nautilus fork)
 
-  sudo ln -s `pwd`/libliferaynativity.so /usr/lib/nemo/extensions-3.0/libliferaynativity.so
-  killall -9 nemo
+    sudo ln -s `pwd`/libliferaynativity.so /usr/lib/nemo/extensions-3.0/libliferaynativity.so
+    killall -9 nemo
 
-Upon successful deployment, log messages will be written to ~/.liferay-nativity/liferaynativity.log.
+Upon successful deployment, log messages will be written to `~/.liferay-nativity/liferaynativity.log`.
 
 *Further instructions coming soon*
 
@@ -412,7 +412,7 @@ The following example Java code will overlay testFile.txt with testIcon.icns and
 
 # Issue Tracking and Contributions
 
-LiferayNativity is an open source project and community members are encouraged to submit bug fixes and enhancements.
+Liferay Nativity is an open source project and community members are encouraged to submit bug fixes and enhancements.
 
 Please report all bugs and feature requests here: [http://issues.liferay.com/browse/NVTY](http://issues.liferay.com/browse/NVTY) (you will need to create a free account).
 
@@ -422,7 +422,7 @@ Review the guidelines for contributions to Liferay projects here: [link](https:/
 
 # Licensing
 
-LiferayNativity is licensed under the LGPL. Check [license.txt](https://github.com/liferay/liferay-nativity/blob/master/copyright.txt) for the latest licensing information.
+Liferay Nativity is licensed under the LGPL. Check [license.txt](https://github.com/liferay/liferay-nativity/blob/master/copyright.txt) for the latest licensing information.
 
 # Contact
 
